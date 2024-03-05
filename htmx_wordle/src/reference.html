@@ -1,0 +1,145 @@
+---
+import AvailableLetters from "./AvailableLetters.astro";
+import { calculatePositions } from "../engine/wordle";
+
+const { word, guesses, completed } = Astro.props;
+
+const DEBUG = true;
+
+const guessBlocks = new Array(6).fill(0).map((_, i) => {
+  if(i < guesses.length) {
+    return calculatePositions(word, guesses[i]);
+  } else {
+    return new Array(5).fill(0).map((_, index) => ({
+      letter: '',
+      state: "empty",
+      index,
+    }));
+  }
+});
+
+const extras = {
+  "wrong": "bg-gray-900 text-white",
+  "correct": "bg-green-900",
+  "wrong-place": "bg-yellow-900",
+  "empty": "text-white",
+}
+---
+
+{Astro.props.invalidWord && (
+  <div
+    id="toast"
+    class="p-5 rounded-xl bg-red-700 text-white text-lg mb-5 absolute left-3 top-3"
+    hx-swap-oob="true"
+    x-data="{ show: true }"
+    x-show="show"
+    x-init="setTimeout(() => show = false, 3000)"
+    x-transition.duration.1000ms
+  >
+    <p>"{Astro.props.invalidWord}" is not a valid word</p>
+  </div>
+)}
+
+<div class="flex flex-col items-center" id="wordle">
+  <div class="text-white tracking-[1rem] mb-5 w-full uppercase flex justify-center items-center text-3xl font-bold">
+    WORDLE
+  </div>
+
+  <div class="flex flex-col gap-2">
+    {DEBUG && (
+      <div class="flex gap-2">
+        {word.split("").map((letter) => (
+          <div class={`w-16 h-16 uppercase flex justify-center items-center text-3xl italic text-white`}>
+            {letter}
+          </div>
+        ))}
+      </div>
+    )}
+
+    {completed && (
+      <div class="mb-6 flex justify-center">
+        <button
+          hx-post="/new"
+          hx-target="#wordle"
+          class="bg-blue-800 text-white font-bold px-6 py-4 rounded-full text-4xl"
+        >
+          Try Again?
+        </button>
+      </div>
+    )}
+
+    {guessBlocks.map((guess, line) => line === guesses.length && !completed ? (
+      <form
+        class="flex gap-2"
+        x-data="{ letters: ['', '', '', '', ''] }"
+        @keyup.window="addCharacter($event, $data)"
+        hx-post="/guess"
+        hx-target="#wordle"
+        hx-trigger="doSubmit from:body"
+        x-effect="submitIfFull($data)"
+      >
+        <input type="hidden" name="guess" x-bind:value="letters.slice(0, 5).join('')" />
+        <input type="hidden" name="gameId" value={Astro.props.gameId} />
+        <template x-for="(value, index) in letters">
+          <div
+            class="w-16 h-16 uppercase border-2 flex justify-center items-center text-3xl font-bold text-white"
+            :class="{'bg-gray-700': value === ''}"
+            x-text="value"
+          />
+        </template>
+      </form>
+    ) : (
+      <div class="flex gap-2">
+        {guess.map(({ letter, state }, line) => (
+          <div
+            class={`w-16 h-16 uppercase border-2 flex justify-center items-center text-3xl font-bold ${extras[state]}`}
+          >
+            {letter}
+          </div>
+        ))}
+      </div>
+    ))}
+  </div>
+
+  <div class="mt-5">
+    <AvailableLetters
+      guesses={guesses}
+    />
+  </div>
+</div>
+
+<script is:inline>
+  function addCharacter(evt, data) {
+    const letter = evt.key.toUpperCase();
+    if(letter.length === 1) {
+      const index = data.letters.indexOf("");
+      if (index !== -1) {
+        data.letters[index] = letter;
+      }
+    }
+  }
+
+  function submitIfFull({ letters }) {
+    if (letters.indexOf("") === -1) {
+      Alpine.nextTick(() => {
+        document.body.dispatchEvent(new Event('doSubmit'));
+      });
+    }
+  }
+</script>
+
+<div class="flex flex-col gap-2 items-center">
+    {LINES.map((line) => (
+      <div class="flex gap-2">
+        {line.map((letter) => (
+          <div
+            class={`flex items-center justify-center w-8 h-12 rounded-md ${
+              available.includes(letter) ? "bg-gray-200" : "bg-gray-700 text-white"
+            }`}
+          >
+            {letter.toUpperCase()}
+          </div>
+        ))}
+      </div>
+    ))}
+    </div>
