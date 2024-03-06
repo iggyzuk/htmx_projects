@@ -105,7 +105,7 @@ async fn new_game(State(state): State<Arc<AppState>>) -> impl IntoResponse {
     let mut games = state.games.write().await;
     games.insert(id, Game::new(id, word.clone()));
 
-    println!("{}", word);
+    println!("id: {id}, word: {word}");
 
     // Redirect to: /game/uuid
     Redirect::to(format!("/game/{}", id).as_str())
