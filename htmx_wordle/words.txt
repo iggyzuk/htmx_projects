@@ -1362,6 +1362,7 @@ pagan
 paint
 paler
 palsy
+panda
 panel
 panic
 pansy

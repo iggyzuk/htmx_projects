@@ -69,6 +69,7 @@ pub async fn run() {
         .route("/", get(index))
         .route("/new_game", get(new_game))
         .route("/game/:id", get(game))
+        .route("/games", get(games))
         .with_state(state);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3242").await.unwrap();
@@ -104,12 +105,25 @@ body {
     }
 }
 
-async fn index(State(state): State<Arc<AppState>>) -> Markup {
-    let active_games = state.games.read().await.len();
+async fn index() -> Markup {
     base(html! {
-        h1 { "Wordle" }
-        p { "Active Games: " (active_games) }
-        (new_game_btn_markup())
+        div class="mx-auto" style="max-width:400px;" {
+            div .card {
+                div .card-body {
+                    h1 .card-title { "📕 Wordle" }
+                    p .card-text {
+                        "Experience a thrilling game where you have six attempts to guess a secret five-letter word, using strategic guesses and clever deduction!"
+                    }
+                    small .card-text .text-secondary { "Made by " a href="https://iggyzuk.com/" { "Iggy Zuk" } }
+                    div class="text-center" {
+                        (new_game_btn_markup())
+                        (all_games_btn_markup())
+                    }
+                }
+            }
+        }
+        // Replace this with all games
+        div #all-games { }
     })
 }
 
@@ -232,8 +246,50 @@ async fn game(
     markup
 }
 
+async fn games(State(state): State<Arc<AppState>>) -> Markup {
+    let games = state.games.read().await;
+    html! {
+        table class="table" {
+            thead {
+                tr {
+                    th scope="col" { "Word" }
+                    th scope="col" { "Last Guess" }
+                    th scope="col" { "Guesses" }
+                    th scope="col" { "Link" }
+                }
+            }
+            tbody {
+                @for (game_id, game) in games.iter() {
+                    @let complete = game.is_complete();
+                    @let guesses = game.guesses.len();
+                    @let short_id = game_id.to_string().chars().take(8).collect::<String>();
+                    @let last_guess = game.guesses.iter().last();
+                    tr .table-warning[complete] .fw-bold[complete] {
+                        @if complete {
+                            td { (game.word) }
+                        } @else {
+                            td { "?????" }
+                        }
+                        @if last_guess.is_some() {
+                            td { (last_guess.unwrap()) }
+                        } @else {
+                            td { "-----" }
+                        }
+                        td { (guesses)"/6" }
+                        td { a href={"/game/"(game_id)} { (short_id) } }
+                    }
+                }
+            }
+        }
+    }
+}
+
 fn new_game_btn_markup() -> Markup {
     html! { button hx-target="body" hx-push-url="true" hx-get="/new_game" class="btn btn-primary m-2" { "Play" } }
+}
+
+fn all_games_btn_markup() -> Markup {
+    html! { button hx-target="#all-games" hx-get="/games" class="btn btn-warning m-2" { "Games" } }
 }
 
 fn available_letters_markup(available: &Vec<char>) -> Markup {
