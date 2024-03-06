@@ -6,12 +6,12 @@ use axum::{
     routing::get,
     Router,
 };
-use constants::{LETTERS, SAVE_DATA_PATH};
+use constants::LETTERS;
 use game::{Game, GameId};
 use maud::{html, Markup, DOCTYPE};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use tinyrand::{RandRange, Seeded, StdRand};
-use tokio::{fs::File, io::AsyncWriteExt, sync::RwLock};
+use tokio::sync::RwLock;
 use uuid::Uuid;
 use word::WordState;
 
@@ -183,7 +183,7 @@ async fn game(
             }
 
             base(html! {
-                h1 { "Wordle" }
+                h1 { "📕 " a hx-boost href="/" .text-dark { "Wordle" } }
                 p { (game_id) }
 
                 // Secret word – visible in debug.
@@ -215,7 +215,7 @@ async fn game(
                     @if !game.is_complete() {
                         form hx-get={"/game/"(game_id)} hx-target="body" class="text-center" {
                             input type="text" id="guess" name="guess" placeholder="write" {}
-                            button class="btn btn-primary m-2" type="submit" { "Submit" }
+                            button class="btn btn-primary m-2" type="submit" { "💭 Guess" }
                         }
                     } @else {
                         div class="text-center" {
@@ -285,11 +285,11 @@ async fn games(State(state): State<Arc<AppState>>) -> Markup {
 }
 
 fn new_game_btn_markup() -> Markup {
-    html! { button hx-target="body" hx-push-url="true" hx-get="/new_game" class="btn btn-primary m-2" { "Play" } }
+    html! { button hx-target="body" hx-push-url="true" hx-get="/new_game" class="btn btn-primary m-2" { "⭐️ Play" } }
 }
 
 fn all_games_btn_markup() -> Markup {
-    html! { button hx-target="#all-games" hx-get="/games" class="btn btn-warning m-2" { "Games" } }
+    html! { button hx-target="#all-games" hx-get="/games" class="btn btn-warning m-2" { "📘 Games" } }
 }
 
 fn available_letters_markup(available: &Vec<char>) -> Markup {
