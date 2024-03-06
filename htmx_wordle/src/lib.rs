@@ -126,8 +126,9 @@ async fn game(
             let mut valid_word = true;
 
             if let Some(guess) = &query.guess {
+                let guess = guess.to_lowercase();
                 if state.words.contains(&guess.as_str()) {
-                    game.add_guess(guess.clone());
+                    game.add_guess(guess);
                 } else {
                     valid_word = false;
                 }
@@ -146,7 +147,7 @@ async fn game(
 
                     @if valid_word == false {
                         // Toast – maybe need to use hx-swap-oob="true"
-                        div id="toast" class="alert alert-danger" role="alert" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 3000)" "x-transition.duration.500ms" {
+                        div id="toast" class="alert alert-danger" role="alert" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 2000)" "x-transition.duration.500ms" {
                             (guess)" is not a valid word"
                         }
                     }
@@ -176,7 +177,6 @@ async fn game(
                     }
                 }
 
-                // todo: gray out used ones instead.
                 (available_letters_markup(&game.get_available_letters()))
             });
         }
@@ -185,6 +185,7 @@ async fn game(
                 div class="text-center p-2" {
                     h1 { "Game doesn't exist!" }
                     p { (game_id) }
+                    (new_game_button())
                 }
             });
         }
@@ -202,12 +203,12 @@ fn available_letters_markup(available: &Vec<char>) -> Markup {
         @for segment in segments {
             div class="d-flex flex-wrap gap-1 mb-1 justify-content-center" {
                 @for letter in segment {
-                    // todo: combine divs into one
-                    @if available.contains(&letter) {
-                        div class="p-2 bg-primary text-white" { (letter) }
-                    } @else {
-                        div class="p-2 bg-secondary text-white" { (letter) }
-                    }
+                    @let class = if available.contains(&letter) {
+                        "p-2 bg-primary text-white"
+                    } else {
+                        "p-2 bg-secondary text-white"
+                    };
+                    div class=(class) { (letter) }
                 }
             }
         }
