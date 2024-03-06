@@ -1,9 +1,11 @@
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::constants::LETTERS;
 
 pub type GameId = Uuid;
 
+#[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct Game {
     pub id: Uuid,
     pub word: String,

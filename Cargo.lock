@@ -262,6 +262,7 @@ dependencies = [
  "axum",
  "maud",
  "serde",
+ "serde_json",
  "tinyrand",
  "tokio",
  "uuid",

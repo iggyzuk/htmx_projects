@@ -6,12 +6,12 @@ use axum::{
     routing::get,
     Router,
 };
-use constants::LETTERS;
+use constants::{LETTERS, SAVE_DATA_PATH};
 use game::{Game, GameId};
 use maud::{html, Markup, DOCTYPE};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use tinyrand::{RandRange, Seeded, StdRand};
-use tokio::sync::RwLock;
+use tokio::{fs::File, io::AsyncWriteExt, sync::RwLock};
 use uuid::Uuid;
 use word::WordState;
 
@@ -19,6 +19,7 @@ use crate::word::LetterState;
 
 mod constants;
 mod game;
+mod storage;
 mod word;
 
 struct AppState {
@@ -27,21 +28,48 @@ struct AppState {
 }
 
 impl AppState {
-    fn new() -> Arc<AppState> {
+    async fn new() -> Arc<AppState> {
         let words: Vec<&'static str> = include_str!("../words.txt").lines().collect();
+
+        // Try and load the save data from disk
+        match storage::load().await {
+            Ok(save_data) => {
+                return Arc::new(AppState {
+                    words,
+                    games: RwLock::new(
+                        save_data
+                            .games
+                            .into_iter()
+                            .map(|g| (g.id, g))
+                            .collect::<HashMap<GameId, Game>>(),
+                    ),
+                });
+            }
+            Err(err) => println!("{err}"),
+        }
         Arc::new(AppState {
             words,
             games: RwLock::new(HashMap::new()),
         })
     }
+    async fn get_save_data(&self) -> Vec<Game> {
+        self.games
+            .read()
+            .await
+            .values()
+            .cloned()
+            .collect::<Vec<_>>()
+    }
 }
 
 pub async fn run() {
+    let state = AppState::new().await;
+
     let app = Router::new()
         .route("/", get(index))
         .route("/new_game", get(new_game))
         .route("/game/:id", get(game))
-        .with_state(AppState::new());
+        .with_state(state);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3242").await.unwrap();
 
@@ -81,12 +109,8 @@ async fn index(State(state): State<Arc<AppState>>) -> Markup {
     base(html! {
         h1 { "Wordle" }
         p { "Active Games: " (active_games) }
-        (new_game_button())
+        (new_game_btn_markup())
     })
-}
-
-fn new_game_button() -> Markup {
-    html! { button hx-target="body" hx-push-url="true" hx-get="/new_game" class="btn btn-primary m-2" { "Play" } }
 }
 
 async fn new_game(State(state): State<Arc<AppState>>) -> impl IntoResponse {
@@ -102,8 +126,18 @@ async fn new_game(State(state): State<Arc<AppState>>) -> impl IntoResponse {
 
     // Create a new game with a unique id.
     let id = Uuid::new_v4();
-    let mut games = state.games.write().await;
-    games.insert(id, Game::new(id, word.clone()));
+
+    // Drop write lock at end of block
+    {
+        let mut games = state.games.write().await;
+        games.insert(id, Game::new(id, word.clone()));
+    }
+
+    // Save state with new game
+    match storage::save(state.get_save_data().await).await {
+        Ok(_) => {}
+        Err(err) => panic!("{err}"),
+    }
 
     println!("id: {id}, word: {word}");
 
@@ -121,7 +155,7 @@ async fn game(
     Path(game_id): Path<GameId>,
     Query(query): Query<GuessQuery>,
 ) -> Markup {
-    match state.games.write().await.get_mut(&game_id) {
+    let markup = match state.games.write().await.get_mut(&game_id) {
         Some(game) => {
             let mut valid_word = true;
 
@@ -134,7 +168,7 @@ async fn game(
                 }
             }
 
-            return base(html! {
+            base(html! {
                 h1 { "Wordle" }
                 p { (game_id) }
 
@@ -172,24 +206,34 @@ async fn game(
                     } @else {
                         div class="text-center" {
                             h3 { "the word was: " b { (game.word) } }
-                            (new_game_button())
+                            (new_game_btn_markup())
                         }
                     }
                 }
 
                 (available_letters_markup(&game.get_available_letters()))
-            });
+            })
         }
-        None => {
-            return base(html! {
-                div class="text-center p-2" {
-                    h1 { "Game doesn't exist!" }
-                    p { (game_id) }
-                    (new_game_button())
-                }
-            });
-        }
+        None => base(html! {
+            div class="text-center p-2" {
+                h1 { "Game doesn't exist!" }
+                p { (game_id) }
+                (new_game_btn_markup())
+            }
+        }),
+    };
+
+    // Save the state after the write lock is dropped
+    match storage::save(state.get_save_data().await).await {
+        Ok(_) => {}
+        Err(err) => panic!("{err}"),
     }
+
+    markup
+}
+
+fn new_game_btn_markup() -> Markup {
+    html! { button hx-target="body" hx-push-url="true" hx-get="/new_game" class="btn btn-primary m-2" { "Play" } }
 }
 
 fn available_letters_markup(available: &Vec<char>) -> Markup {

@@ -18,3 +18,7 @@ primary_region = 'waw'
   memory = '1gb'
   cpu_kind = 'shared'
   cpus = 1
+
+[mounts]
+  source="storage_dir"
+  destination="/var/www/html/storage"
