@@ -160,7 +160,7 @@ async fn game(
             let mut valid_word = true;
 
             if let Some(guess) = &query.guess {
-                let guess = guess.to_lowercase();
+                let guess = guess.trim().to_lowercase();
                 if state.words.contains(&guess.as_str()) {
                     game.add_guess(guess);
                 } else {
