@@ -8,7 +8,7 @@ use axum::{
 };
 use constants::LETTERS;
 use game::{Game, GameId};
-use maud::{html, Markup, DOCTYPE};
+use maud::{html, Markup, PreEscaped, DOCTYPE};
 use serde::Deserialize;
 use tinyrand::{RandRange, Seeded, StdRand};
 use tokio::sync::RwLock;
@@ -169,6 +169,22 @@ async fn game(
     Path(game_id): Path<GameId>,
     Query(query): Query<GuessQuery>,
 ) -> Markup {
+    let js = PreEscaped(
+        r#"
+function addLetter(value, data) {
+    const letter = value.toLowerCase();
+    if(letter.length === 1 && data.letters.length < 5) {
+        data.letters.push(letter);
+    }
+}
+function removeLetter(data) {
+    if(data.letters.length > 0) {
+        data.letters.pop();
+    }
+}
+"#,
+    );
+
     let markup = match state.games.write().await.get_mut(&game_id) {
         Some(game) => {
             let mut valid_word = true;
@@ -183,7 +199,10 @@ async fn game(
             }
 
             base(html! {
-                h1 { "📕 " a hx-boost href="/" .text-dark { "Wordle" } }
+
+                script type="text/javascript" { (js) }
+
+                h1 { "📕 " a hx-boost="true" href="/" .text-dark { "Wordle" } }
                 p { (game_id) }
 
                 // Secret word – visible in debug.
@@ -195,16 +214,30 @@ async fn game(
 
                     @if valid_word == false {
                         // Toast – maybe need to use hx-swap-oob="true"
-                        div id="toast" class="alert alert-danger" role="alert" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 2000)" "x-transition.duration.500ms" {
-                            (guess)" is not a valid word"
-                        }
+                        div
+                        role="alert"
+                        #toast .alert .alert-danger .position-absolute .top-0 .start-0
+                        x-data="{ show: true }" x-show="show"
+                        x-init="setTimeout(() => show = false, 2000)" "x-transition.duration.500ms"
+                        { (guess)" is not a valid word" }
                     }
                 }
 
-                div class="m-3" {
+                div
+                x-data="{
+                    letters: [], 
+                    combine: function() { return this.letters.join(''); }, 
+                    fill: function() { return this.letters.concat(Array(5 - this.letters.length).fill('-')).join(''); } 
+                }"
+                class="m-3"
+                {
+                    @let mut show_dynamic = !game.is_complete();
                     @for guess in &game.get_guesses() {
                         @if let Some(guess) = guess {
                             (word_markup(WordState::process_word(guess, &game.word)))
+                        } @else if show_dynamic {
+                            @let _ = show_dynamic = false;
+                            (dynamic_word_markup())
                         } @else {
                             (word_markup(WordState::empty()))
                         }
@@ -213,10 +246,16 @@ async fn game(
                     // The form for guessing.
                     // Note: we replace the entire body, could look into hx-select and target a specific id.
                     @if !game.is_complete() {
-                        form hx-get={"/game/"(game_id)} hx-target="body" class="text-center" {
-                            input type="text" id="guess" name="guess" placeholder="write" {}
-                            button class="btn btn-primary m-2" type="submit" { "💭 Guess" }
-                        }
+                        form
+                        #guess-form .text-center
+                        hx-get={"/game/"(game_id)}
+                        hx-target="body"
+                        hx-trigger="keydown[keyCode==13] from:body, click-guess from:body" // submit on `enter` or `click`
+                        "@keydown.window"="addLetter($event.key, $data)" // add letter on `key`
+                        "@keydown.backspace.window"="removeLetter($data)" // remove letter on `backspace`
+                        "@click-letter.window"="addLetter($event.detail.letter, $data)" // add letter on `click`
+                        "@click-erase.window"="removeLetter($data)" // remove letter on `click`
+                        { input type="hidden" x-model="combine" id="guess" name="guess" {} }
                     } @else {
                         div class="text-center" {
                             h3 { "the word was: " b { (game.word) } }
@@ -276,7 +315,7 @@ async fn games(State(state): State<Arc<AppState>>) -> Markup {
                             td { "-----" }
                         }
                         td { (guesses)"/6" }
-                        td { a href={"/game/"(game_id)} { (short_id) } }
+                        td { a hx-boost="true" href={"/game/"(game_id)} { (short_id) } }
                     }
                 }
             }
@@ -295,20 +334,40 @@ fn all_games_btn_markup() -> Markup {
 fn available_letters_markup(available: &Vec<char>) -> Markup {
     let mut chars = LETTERS.chars().collect::<Vec<_>>();
     let mut segments = vec![];
-    segments.push(chars.drain(..10).collect::<Vec<_>>());
-    segments.push(chars.drain(..9).collect::<Vec<_>>());
-    segments.push(chars.drain(..).collect::<Vec<_>>());
+
+    segments.push(chars.drain(..10).map(|c| (c, None)).collect::<Vec<_>>());
+    segments.push(chars.drain(..9).map(|c| (c, None)).collect::<Vec<_>>());
+
+    // Last row adds two special buttons
+    let mut last_row = chars.drain(..).map(|c| (c, None)).collect::<Vec<_>>();
+    last_row.push(('✅', Some("click-guess")));
+    last_row.insert(0, ('❌', Some("click-erase")));
+    segments.push(last_row);
 
     html! {
-        @for segment in segments {
-            div class="d-flex flex-wrap gap-1 mb-1 justify-content-center" {
-                @for letter in segment {
-                    @let class = if available.contains(&letter) {
-                        "p-2 bg-primary text-white"
-                    } else {
-                        "p-2 bg-secondary text-white"
-                    };
-                    div class=(class) { (letter) }
+        div x-data {
+            @for segment in segments {
+                div class="d-flex flex-wrap gap-1 mb-1 justify-content-center" {
+                    @for letter in segment {
+                        @if let Some(event) = letter.1 {
+                            // Special buttons: guess/erase – they dispatch events
+                            button
+                            .p-2 .btn .btn-outline-primary
+                            "@mousedown"={"$dispatch('"(event)"')"}
+                            { (letter.0) }
+                        } @else {
+                            // Basic buttons – they dispatch events
+                            @let class = if available.contains(&letter.0) {
+                                "p-2 btn btn-primary"
+                            } else {
+                                "p-2 btn btn-secondary"
+                            };
+                            button
+                            class=(class)
+                            "@mousedown"={"$dispatch('click-letter', { letter: '"(letter.0)"' })"}
+                            { (letter.0) }
+                        }
+                    }
                 }
             }
         }
@@ -333,6 +392,20 @@ fn word_markup(word: WordState) -> Markup {
                         div class="p-2 bg-light text-dark border" { (letter.id) }
                     }
                 }
+            }
+        }
+    }
+}
+
+fn dynamic_word_markup() -> Markup {
+    html! {
+        div class = "d-flex justify-content-center gap-1 mb-1" {
+            template x-for="letter in fill" {
+                div
+                .p-2 .bg-light .text-dark .border
+                x-bind:class="{ 'border-primary': letter == '-' }"
+                x-text="letter"
+                { }
             }
         }
     }
