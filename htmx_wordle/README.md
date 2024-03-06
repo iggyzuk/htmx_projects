@@ -1,11 +1,5 @@
-# Wordle
+# Wordle in HTMX
 
-## Checklist
+State of wordle is implemented in full page swaps – simple.
 
-- [ ] Create AppState
-- [ ] Add HTMX + Alpine.js
-- [ ] If app-state has no game: create one
-- [x] Pick a word from a list
-- [ ] Check if work is real
-- [ ] Detect keyboard press in JS
-- [ ] Submit when full
+Inspired by: <https://www.youtube.com/watch?v=vQUqgURgG8M>

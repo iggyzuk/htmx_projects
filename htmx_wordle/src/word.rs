@@ -18,6 +18,7 @@ impl Letter {
     }
 }
 
+#[derive(PartialEq, Eq)]
 pub enum LetterState {
     Correct,
     WrongPlace,
@@ -25,21 +26,35 @@ pub enum LetterState {
     Empty,
 }
 
-pub fn process_word(word: String) -> WordState {
-    let word = word.to_lowercase();
-    let letters = word
-        .chars()
-        .enumerate()
-        .map(|(position, letter)| {
-            if word.chars().nth(position).unwrap() == letter {
-                Letter::new(letter, position as u8, LetterState::Correct)
-            } else if word.contains(letter) {
-                Letter::new(letter, position as u8, LetterState::WrongPlace)
-            } else {
-                Letter::new(letter, position as u8, LetterState::Wrong)
-            }
-        })
-        .collect::<Vec<_>>();
+impl WordState {
+    pub fn empty() -> Self {
+        Self {
+            letters: vec![
+                Letter::new('-', 0, LetterState::Empty),
+                Letter::new('-', 1, LetterState::Empty),
+                Letter::new('-', 2, LetterState::Empty),
+                Letter::new('-', 3, LetterState::Empty),
+                Letter::new('-', 4, LetterState::Empty),
+            ],
+        }
+    }
 
-    WordState { letters }
+    pub fn process_word(guess: &String, word: &String) -> WordState {
+        let letters = guess
+            .to_lowercase()
+            .chars()
+            .enumerate()
+            .map(|(position, letter)| {
+                if word.chars().nth(position).unwrap() == letter {
+                    Letter::new(letter, position as u8, LetterState::Correct)
+                } else if word.contains(letter) {
+                    Letter::new(letter, position as u8, LetterState::WrongPlace)
+                } else {
+                    Letter::new(letter, position as u8, LetterState::Wrong)
+                }
+            })
+            .collect::<Vec<_>>();
+
+        WordState { letters }
+    }
 }

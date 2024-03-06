@@ -11,4 +11,4 @@ tokio = { version = "1.36.0", features = ["full"] }
 tower-http = { version = "0.5.0", features = ["limit", "trace"] }
 maud = { version = "0.26.0", features = ["axum"] }
 tinyrand = "0.5.0"
-uuid = { version = "1.7.0", features = ["v4"] }
+uuid = { version = "1.7.0", features = ["v4", "serde"] }

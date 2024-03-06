@@ -1,0 +1,1 @@
+pub const LETTERS: &'static str = "qwertyuiopasdfghjklzxcvbnm";
