@@ -21,4 +21,4 @@ primary_region = 'waw'
 
 [mounts]
   source="storage_dir"
-  destination="/var/www/html/storage"
+  destination="/usr/src/myapp/data/"

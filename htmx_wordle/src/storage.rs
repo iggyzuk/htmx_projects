@@ -2,7 +2,7 @@ use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 use tokio::{
-    fs::File,
+    fs::{create_dir_all, File},
     io::{AsyncReadExt, AsyncWriteExt},
 };
 
@@ -26,6 +26,15 @@ pub async fn save(games: Vec<Game>) -> Result<(), String> {
 
     // Path to write the JSON file
     let file_path = Path::new(SAVE_DATA_PATH);
+
+    // Create directories recursively if they don't exist
+    if let Some(parent) = file_path.parent() {
+        if !parent.exists() {
+            if let Err(e) = create_dir_all(parent).await {
+                return Err(format!("Error creating directories: {}", e));
+            }
+        }
+    }
 
     // Open the file in write mode
     let mut file = match File::create(&file_path).await {
