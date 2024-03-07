@@ -1,7 +1,6 @@
 [workspace]
 members = ["htmx_infinite_scroll", "htmx_wordle"]
-
-workspace.resolver = "1"
+resolver = "2"
 
 [workspace.dependencies]
 axum = { version = "0.7.4", features = ["multipart"] }
@@ -12,3 +11,4 @@ tower-http = { version = "0.5.0", features = ["limit", "trace"] }
 maud = { version = "0.26.0", features = ["axum"] }
 tinyrand = "0.5.0"
 uuid = { version = "1.7.0", features = ["v4", ] }
+chrono = { version = "0.4.35", features = ["serde"] }

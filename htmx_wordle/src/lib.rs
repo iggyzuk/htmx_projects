@@ -8,7 +8,7 @@ use axum::{
 };
 use constants::LETTERS;
 use game::{Game, GameId};
-use maud::{html, Markup, PreEscaped, DOCTYPE};
+use maud::{html, Markup, PreEscaped, Render, DOCTYPE};
 use serde::Deserialize;
 use tinyrand::{RandRange, Seeded, StdRand};
 use tokio::sync::RwLock;
@@ -85,16 +85,31 @@ fn base(content: Markup) -> Markup {
     let style = r#"
 body {
     font-family: 'Roboto Mono', monospace;
-}"#;
+}
+th {
+    font-size: 12px;
+}
+td {
+    font-size: 10px;
+}
+"#;
+
+    let scripts = r#"
+document.addEventListener('dblclick', function(event) {
+    event.preventDefault();
+}, { passive: false });
+"#;
 
     html! {
         (DOCTYPE)
         head {
             html lang="en" data-framework="htmx";
             meta charset="utf-8";
+            meta name="viewport" content="width=device-width, initial-scale=3, maximum-scale=1, user-scalable=no" {}
             link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" {}
             script src="//unpkg.com/alpinejs" defer {}
             script src="https://unpkg.com/htmx.org@1.9.10" {}
+            script { (scripts) }
             style { (style) }
         }
         body {
@@ -169,6 +184,7 @@ async fn game(
     Path(game_id): Path<GameId>,
     Query(query): Query<GuessQuery>,
 ) -> Markup {
+    // todo: create alpine data object for this
     let js = PreEscaped(
         r#"
 function addLetter(value, data) {
@@ -185,6 +201,8 @@ function removeLetter(data) {
 "#,
     );
 
+    let short_id = game_id.to_string().chars().take(8).collect::<String>();
+
     let markup = match state.games.write().await.get_mut(&game_id) {
         Some(game) => {
             let mut valid_word = true;
@@ -200,13 +218,10 @@ function removeLetter(data) {
 
             base(html! {
 
-                script type="text/javascript" { (js) }
+                script { (js) }
 
                 h1 { "📕 " a hx-boost="true" href="/" .text-dark { "Wordle" } }
-                p { (game_id) }
-
-                // Secret word – visible in debug.
-                // h2 { "Word: " (game.word) }
+                p { (short_id) }
 
                 // Is this a guess attempt?
                 @if let Some(guess) = query.guess {
@@ -224,22 +239,26 @@ function removeLetter(data) {
                 }
 
                 div
+                .m-3
                 x-data="{
                     letters: [], 
                     combine: function() { return this.letters.join(''); }, 
                     fill: function() { return this.letters.concat(Array(5 - this.letters.length).fill('-')).join(''); } 
                 }"
-                class="m-3"
+                "@keydown.window"="addLetter($event.key, $data)" // add letter on `key`
+                "@keydown.backspace.window"="removeLetter($data)" // remove letter on `backspace`
+                "@click-letter.window"="addLetter($event.detail.letter, $data)" // add letter on `click`
+                "@click-erase.window"="removeLetter($data)" // remove letter on `click`
                 {
                     @let mut show_dynamic = !game.is_complete();
                     @for guess in &game.get_guesses() {
                         @if let Some(guess) = guess {
-                            (word_markup(WordState::process_word(guess, &game.word)))
+                            (WordState::guess(guess, &game.word))
                         } @else if show_dynamic {
                             @let _ = show_dynamic = false;
                             (dynamic_word_markup())
                         } @else {
-                            (word_markup(WordState::empty()))
+                            (WordState::empty())
                         }
                     }
 
@@ -251,10 +270,6 @@ function removeLetter(data) {
                         hx-get={"/game/"(game_id)}
                         hx-target="body"
                         hx-trigger="keydown[keyCode==13] from:body, click-guess from:body" // submit on `enter` or `click`
-                        "@keydown.window"="addLetter($event.key, $data)" // add letter on `key`
-                        "@keydown.backspace.window"="removeLetter($data)" // remove letter on `backspace`
-                        "@click-letter.window"="addLetter($event.detail.letter, $data)" // add letter on `click`
-                        "@click-erase.window"="removeLetter($data)" // remove letter on `click`
                         { input type="hidden" x-model="combine" id="guess" name="guess" {} }
                     } @else {
                         div class="text-center" {
@@ -287,35 +302,44 @@ function removeLetter(data) {
 
 async fn games(State(state): State<Arc<AppState>>) -> Markup {
     let games = state.games.read().await;
+
+    let mut games_sorted = games.values().collect::<Vec<_>>();
+    games_sorted.sort_by_key(|g| g.created);
+    games_sorted.reverse();
+
     html! {
         table class="table" {
             thead {
                 tr {
                     th scope="col" { "Word" }
-                    th scope="col" { "Last Guess" }
-                    th scope="col" { "Guesses" }
+                    th scope="col" { "Final" }
+                    th scope="col" { "Guess" }
+                    th scope="col" { "Date" }
                     th scope="col" { "Link" }
                 }
             }
             tbody {
-                @for (game_id, game) in games.iter() {
+                @for game in games_sorted {
                     @let complete = game.is_complete();
+                    @let victory = game.is_victory();
+                    @let loss = game.is_loss();
                     @let guesses = game.guesses.len();
-                    @let short_id = game_id.to_string().chars().take(8).collect::<String>();
+                    @let short_id = game.id.to_string().chars().take(8).collect::<String>();
                     @let last_guess = game.guesses.iter().last();
-                    tr .table-warning[complete] .fw-bold[complete] {
+                    tr .table-warning[victory] .table-danger[loss] .fw-bold[complete] {
                         @if complete {
-                            td { (game.word) }
+                            td .text-warning[victory] .text-danger[loss] { (game.word) }
                         } @else {
                             td { "?????" }
                         }
                         @if last_guess.is_some() {
-                            td { (last_guess.unwrap()) }
+                            td .text-warning[victory] .text-danger[loss] { (last_guess.unwrap()) }
                         } @else {
                             td { "-----" }
                         }
                         td { (guesses)"/6" }
-                        td { a hx-boost="true" href={"/game/"(game_id)} { (short_id) } }
+                        td { (game.created.unwrap().format("%y/%m/%d")) }
+                        td { a hx-boost="true" href={"/game/"(game.id)} { (short_id) } }
                     }
                 }
             }
@@ -351,7 +375,7 @@ fn available_letters_markup(available: &Vec<char>) -> Markup {
                     @for letter in segment {
                         @if let Some(event) = letter.1 {
                             // Special buttons: guess/erase – they dispatch events
-                            button
+                            div
                             .p-2 .btn .btn-outline-primary
                             "@mousedown"={"$dispatch('"(event)"')"}
                             { (letter.0) }
@@ -362,7 +386,7 @@ fn available_letters_markup(available: &Vec<char>) -> Markup {
                             } else {
                                 "p-2 btn btn-secondary"
                             };
-                            button
+                            div
                             class=(class)
                             "@mousedown"={"$dispatch('click-letter', { letter: '"(letter.0)"' })"}
                             { (letter.0) }
@@ -374,22 +398,24 @@ fn available_letters_markup(available: &Vec<char>) -> Markup {
     }
 }
 
-fn word_markup(word: WordState) -> Markup {
-    html! {
-        div class = "d-flex justify-content-center gap-1 mb-1" {
-            @for letter in word.letters {
-                @match letter.state {
-                    LetterState::Correct => {
-                        div class="p-2 bg-success text-white border" { (letter.id) }
-                    },
-                    LetterState::WrongPlace => {
-                        div class="p-2 bg-warning text-white border" { (letter.id) }
-                    },
-                    LetterState::Wrong => {
-                        div class="p-2 bg-secondary text-white border" { (letter.id) }
-                    },
-                    LetterState::Empty => {
-                        div class="p-2 bg-light text-dark border" { (letter.id) }
+impl Render for WordState {
+    fn render(&self) -> Markup {
+        html! {
+            div class = "d-flex justify-content-center gap-1 mb-1" {
+                @for letter in &self.letters {
+                    @match letter.state {
+                        LetterState::Correct => {
+                            div class="p-2 bg-success text-white border" { (letter.id) }
+                        },
+                        LetterState::WrongPlace => {
+                            div class="p-2 bg-warning text-white border" { (letter.id) }
+                        },
+                        LetterState::Wrong => {
+                            div class="p-2 bg-secondary text-white border" { (letter.id) }
+                        },
+                        LetterState::Empty => {
+                            div class="p-2 bg-light text-dark border" { (letter.id) }
+                        }
                     }
                 }
             }

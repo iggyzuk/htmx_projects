@@ -13,3 +13,4 @@ serde_json = { workspace = true }
 tinyrand = { workspace = true }
 tokio = { workspace = true }
 uuid = { workspace = true, features = ["serde"] }
+chrono = { workspace = true, features = ["serde"] }

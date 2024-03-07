@@ -1,5 +1,6 @@
 use std::path::Path;
 
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use tokio::{
     fs::{create_dir_all, File},
@@ -73,12 +74,18 @@ pub async fn load() -> Result<SaveData, String> {
     }
 
     // Deserialize the JSON string into a SaveData struct
-    let save_data: SaveData = match serde_json::from_str(&contents) {
+    let mut save_data: SaveData = match serde_json::from_str(&contents) {
         Ok(data) => data,
         Err(e) => {
             return Err(format!("Error deserializing JSON: {}", e));
         }
     };
+
+    for x in &mut save_data.games {
+        if x.created.is_none() {
+            x.created = Some(Utc::now());
+        }
+    }
 
     println!("{:?}: {:#?}", file_path, save_data);
 

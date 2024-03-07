@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -10,6 +11,7 @@ pub struct Game {
     pub id: Uuid,
     pub word: String,
     pub guesses: Vec<String>,
+    pub created: Option<DateTime<Utc>>,
 }
 
 impl Game {
@@ -18,11 +20,20 @@ impl Game {
             id,
             word,
             guesses: vec![],
+            created: Some(Utc::now()),
         }
     }
 
     pub fn is_complete(&self) -> bool {
-        self.guesses.len() >= 6 || self.guesses.contains(&self.word)
+        self.guesses.len() >= 6 || self.is_victory()
+    }
+
+    pub fn is_victory(&self) -> bool {
+        self.guesses.contains(&self.word)
+    }
+
+    pub fn is_loss(&self) -> bool {
+        self.guesses.len() >= 6 && !self.is_victory()
     }
 
     pub fn add_guess(&mut self, word: String) {

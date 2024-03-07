@@ -39,7 +39,7 @@ impl WordState {
         }
     }
 
-    pub fn process_word(guess: &String, word: &String) -> WordState {
+    pub fn guess(guess: &String, word: &String) -> WordState {
         let letters = guess
             .to_lowercase()
             .chars()
