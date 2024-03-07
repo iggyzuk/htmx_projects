@@ -55,13 +55,14 @@ fn base(content: Markup) -> Markup {
 
     html! {
         (DOCTYPE)
-        head {
-            html lang="en" data-framework="htmx";
-            meta charset="utf-8";
-            script src="https://unpkg.com/htmx.org@1.9.10" {}
-            style { (style) }
+        html {
+            head {
+                meta charset="utf-8";
+                script src="https://unpkg.com/htmx.org@1.9.10" {}
+                style { (style) }
+            }
+            body { (content) }
         }
-        body { (content) }
     }
 }
 

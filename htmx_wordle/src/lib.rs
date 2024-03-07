@@ -102,19 +102,20 @@ document.addEventListener('dblclick', function(event) {
 
     html! {
         (DOCTYPE)
-        head {
-            html lang="en" data-framework="htmx";
-            meta charset="utf-8";
-            meta name="viewport" content="width=device-width, initial-scale=3, maximum-scale=1, user-scalable=no" {}
-            link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" {}
-            script src="//unpkg.com/alpinejs" defer {}
-            script src="https://unpkg.com/htmx.org@1.9.10" {}
-            script { (scripts) }
-            style { (style) }
-        }
-        body {
-            div class="container p-3" {
-                (content)
+        html {
+            head {
+                meta charset="utf-8";
+                meta name="viewport" content="width=device-width, initial-scale=3, maximum-scale=1, user-scalable=no" {}
+                link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" {}
+                script src="//unpkg.com/alpinejs" defer {}
+                script src="https://unpkg.com/htmx.org@1.9.10" {}
+                script { (scripts) }
+                style { (style) }
+            }
+            body {
+                div class="container p-3" {
+                    (content)
+                }
             }
         }
     }
