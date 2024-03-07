@@ -121,7 +121,7 @@ document.addEventListener('dblclick', function(event) {
     }
 }
 
-async fn index() -> Markup {
+async fn index(State(state): State<Arc<AppState>>) -> Markup {
     base(html! {
         div class="mx-auto" style="max-width:400px;" {
             div .card {
@@ -133,7 +133,7 @@ async fn index() -> Markup {
                     small .card-text .text-secondary { "Made by " a href="https://iggyzuk.com/" { "Iggy Zuk" } }
                     div class="text-center" {
                         (new_game_btn_markup())
-                        (all_games_btn_markup())
+                        (all_games_btn_markup(state.games.read().await.len()))
                     }
                 }
             }
@@ -352,8 +352,8 @@ fn new_game_btn_markup() -> Markup {
     html! { button hx-target="body" hx-push-url="true" hx-get="/new_game" class="btn btn-primary m-2" { "⭐️ Play" } }
 }
 
-fn all_games_btn_markup() -> Markup {
-    html! { button hx-target="#all-games" hx-get="/games" class="btn btn-warning m-2" { "📘 Games" } }
+fn all_games_btn_markup(count: usize) -> Markup {
+    html! { button hx-target="#all-games" hx-get="/games" class="btn btn-warning m-2" { "📘 Games " small { (count) } } }
 }
 
 fn available_letters_markup(available: &Vec<char>) -> Markup {

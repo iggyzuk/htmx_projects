@@ -66,3 +66,57 @@ impl Game {
         letters
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn quick_victory() {
+        let mut game = Game::new(Uuid::new_v4(), "final".to_string());
+        game.add_guess("guess".to_string());
+        assert_eq!(game.is_complete(), false);
+        game.add_guess("final".to_string());
+        assert_eq!(game.is_complete(), true);
+        assert_eq!(game.is_victory(), true);
+        assert_eq!(game.is_loss(), false);
+    }
+
+    #[test]
+    fn victory() {
+        let mut game = Game::new(Uuid::new_v4(), "final".to_string());
+        game.add_guess("crane".to_string());
+        assert_eq!(game.is_complete(), false);
+        game.add_guess("pilot".to_string());
+        assert_eq!(game.is_complete(), false);
+        game.add_guess("husky".to_string());
+        assert_eq!(game.is_complete(), false);
+        game.add_guess("badge".to_string());
+        assert_eq!(game.is_complete(), false);
+        game.add_guess("epoxy".to_string());
+        assert_eq!(game.is_complete(), false);
+        game.add_guess("final".to_string());
+        assert_eq!(game.is_complete(), true);
+        assert_eq!(game.is_victory(), true);
+        assert_eq!(game.is_loss(), false);
+    }
+
+    #[test]
+    fn loss() {
+        let mut game = Game::new(Uuid::new_v4(), "final".to_string());
+        game.add_guess("crane".to_string());
+        assert_eq!(game.is_complete(), false);
+        game.add_guess("pilot".to_string());
+        assert_eq!(game.is_complete(), false);
+        game.add_guess("husky".to_string());
+        assert_eq!(game.is_complete(), false);
+        game.add_guess("badge".to_string());
+        assert_eq!(game.is_complete(), false);
+        game.add_guess("epoxy".to_string());
+        assert_eq!(game.is_complete(), false);
+        game.add_guess("wrong".to_string());
+        assert_eq!(game.is_complete(), true);
+        assert_eq!(game.is_victory(), false);
+        assert_eq!(game.is_loss(), true);
+    }
+}
