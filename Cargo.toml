@@ -1,5 +1,5 @@
 [workspace]
-members = ["htmx_infinite_scroll", "htmx_wordle"]
+members = ["htmx_crud", "htmx_infinite_scroll", "htmx_wordle"]
 resolver = "2"
 
 [workspace.dependencies]
@@ -7,8 +7,9 @@ axum = { version = "0.7.4", features = ["multipart"] }
 serde = { version = "1.0.196", features = ["derive"] }
 serde_json = "1.0.113"
 tokio = { version = "1.36.0", features = ["full"] }
-tower-http = { version = "0.5.0", features = ["limit", "trace"] }
+tower-http = { version = "0.5.0", features = ["limit", "trace", "cors"] }
 maud = { version = "0.26.0", features = ["axum"] }
 tinyrand = "0.5.0"
-uuid = { version = "1.7.0", features = ["v4", ] }
+uuid = { version = "1.7.0", features = ["v4"] }
 chrono = { version = "0.4.35", features = ["serde"] }
+thiserror = { version = "1.0.57" }
