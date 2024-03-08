@@ -2,7 +2,8 @@ use std::sync::Arc;
 
 use axum::{
     extract::{Path, State},
-    http::Method,
+    http::{Method, StatusCode},
+    response::IntoResponse,
     routing::{delete, get, post, put},
     Form,
 };
@@ -154,21 +155,20 @@ struct CreateTaskForm {
 async fn create_task(
     State(state): State<Arc<AppState>>,
     Form(query): Form<CreateTaskForm>,
-) -> Markup {
+) -> impl IntoResponse {
     let mut tasks = state.tasks.write().await;
     tasks.create(query.title);
-    tasks.render()
+    (StatusCode::CREATED, tasks.render())
 }
 
-async fn read_task(State(state): State<Arc<AppState>>, Path(id): Path<Uuid>) -> Markup {
+async fn read_task(State(state): State<Arc<AppState>>, Path(id): Path<Uuid>) -> impl IntoResponse {
     let tasks = state.tasks.read().await;
     let task = tasks.read(id);
-    html! {
-        @if let Some(task) = task {
-            (&task)
-        }
-        "None"
+
+    if let Some(task) = task {
+        return task.render().into_response();
     }
+    (StatusCode::GONE, "task doesn't exist").into_response()
 }
 
 async fn update_task(State(state): State<Arc<AppState>>, Path(id): Path<Uuid>) -> Markup {
