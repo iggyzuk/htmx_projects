@@ -7,6 +7,10 @@ pub const LETTERS: &'static str = "qwertyuiopasdfghjklzxcvbnm";
 
 pub type GameId = Uuid;
 
+pub fn short_id(id: Uuid) -> String {
+    id.to_string().chars().take(8).collect::<String>()
+}
+
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct Game {
     pub id: Uuid,

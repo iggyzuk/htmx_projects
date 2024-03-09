@@ -2,11 +2,12 @@ use std::{collections::HashMap, sync::Arc, time::SystemTime};
 
 use axum::{
     extract::{Path, Query, State},
+    http::HeaderMap,
     response::{IntoResponse, Redirect},
     routing::get,
     Router,
 };
-use game::{Game, GameId, Letter};
+use game::{short_id, Game, GameId, Letter};
 use maud::{html, Markup, PreEscaped, Render, DOCTYPE};
 use serde::Deserialize;
 use tinyrand::{RandRange, Seeded, StdRand};
@@ -68,9 +69,11 @@ pub async fn run() {
         .route("/games", get(games))
         .with_state(state);
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3242").await.unwrap();
+    let address = "0.0.0.0:3242";
 
-    println!("🚀 Server Started: 0.0.0.0:3242 🚀");
+    let listener = tokio::net::TcpListener::bind(address).await.unwrap();
+
+    println!("🚀 Server Started: {address} 🚀");
 
     axum::serve(listener, app.into_make_service())
         .await
@@ -78,23 +81,8 @@ pub async fn run() {
 }
 
 fn base(content: Markup) -> Markup {
-    let style = r#"
-body {
-    font-family: 'Roboto Mono', monospace;
-}
-th {
-    font-size: 12px;
-}
-td {
-    font-size: 10px;
-}
-"#;
-
-    let scripts = r#"
-document.addEventListener('dblclick', function(event) {
-    event.preventDefault();
-}, { passive: false });
-"#;
+    let style = include_str!("../style.css");
+    let scripts = PreEscaped(include_str!("../scripts.js"));
 
     html! {
         (DOCTYPE)
@@ -102,11 +90,18 @@ document.addEventListener('dblclick', function(event) {
             head {
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=3, maximum-scale=1, user-scalable=no" {}
+
+                // Styles
                 link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" {}
-                script src="//unpkg.com/alpinejs" defer {}
-                script src="https://unpkg.com/htmx.org@1.9.10" {}
-                script { (scripts) }
                 style { (style) }
+
+                // Htmx + Alpine
+                script src="https://unpkg.com/htmx.org@1.9.10" {}
+                script src="//unpkg.com/alpinejs" defer {}
+
+                // Custom scripts
+                script { (scripts) }
+
             }
             body {
                 div class="container p-3" {
@@ -178,27 +173,15 @@ struct GuessQuery {
 
 async fn game(
     State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
     Path(game_id): Path<GameId>,
     Query(query): Query<GuessQuery>,
 ) -> Markup {
-    // todo: create alpine data object for this
-    let js = PreEscaped(
-        r#"
-function addLetter(value, data) {
-    const letter = value.toLowerCase();
-    if(letter.length === 1 && data.letters.length < 5) {
-        data.letters.push(letter);
-    }
-}
-function removeLetter(data) {
-    if(data.letters.length > 0) {
-        data.letters.pop();
-    }
-}
-"#,
-    );
-
-    let short_id = game_id.to_string().chars().take(8).collect::<String>();
+    // Check headers if we should send a fragment or a full page back.
+    let is_fragment = headers.get("hx-request").is_some()
+        && headers
+            .get("hx-target")
+            .map_or(false, |target| target == "wordle-content");
 
     let markup = match state.games.write().await.get_mut(&game_id) {
         Some(game) => {
@@ -213,71 +196,19 @@ function removeLetter(data) {
                 }
             }
 
-            base(html! {
-
-                script { (js) }
-
-                h1 { "📕 " a hx-boost="true" href="/" .text-dark { "Wordle" } }
-                p { (short_id) }
-
-                // Is this a guess attempt?
-                @if let Some(guess) = query.guess {
-                    // h3 { "Guess: " (guess) }
-
-                    @if valid_word == false {
-                        // Toast – maybe need to use hx-swap-oob="true"
-                        div
-                        role="alert"
-                        #toast .alert .alert-danger .position-absolute .top-0 .start-0
-                        x-data="{ show: true }" x-show="show"
-                        x-init="setTimeout(() => show = false, 2000)" "x-transition.duration.500ms"
-                        { (guess)" is not a valid word" }
+            // Send the fragment or the full page.
+            let fragment = game_fragment(&game, query, valid_word);
+            if is_fragment {
+                fragment
+            } else {
+                base(html! {
+                    h1 { "📕 " a hx-boost="true" href="/" .text-dark { "Wordle" } }
+                    p { (short_id(game.id)) }
+                    div #wordle-content {
+                        (fragment)
                     }
-                }
-
-                div
-                .m-3
-                x-data="{
-                    letters: [], 
-                    combine: function() { return this.letters.join(''); }, 
-                    fill: function() { return this.letters.concat(Array(5 - this.letters.length).fill('-')).join(''); } 
-                }"
-                "@keydown.window"="addLetter($event.key, $data)" // add letter on `key`
-                "@keydown.backspace.window"="removeLetter($data)" // remove letter on `backspace`
-                "@click-letter.window"="addLetter($event.detail.letter, $data)" // add letter on `click`
-                "@click-erase.window"="removeLetter($data)" // remove letter on `click`
-                {
-                    @let mut show_dynamic = !game.is_complete();
-                    @for guess in &game.get_guesses() {
-                        @if let Some(guess) = guess {
-                            (WordState::guess(guess, &game.word))
-                        } @else if show_dynamic {
-                            @let _ = show_dynamic = false;
-                            (dynamic_word_markup())
-                        } @else {
-                            (WordState::empty())
-                        }
-                    }
-
-                    // The form for guessing.
-                    // Note: we replace the entire body, could look into hx-select and target a specific id.
-                    @if !game.is_complete() {
-                        form
-                        #guess-form .text-center
-                        hx-get={"/game/"(game_id)}
-                        hx-target="body"
-                        hx-trigger="keydown[keyCode==13] from:body, click-guess from:body" // submit on `enter` or `click`
-                        { input type="hidden" x-model="combine" id="guess" name="guess" {} }
-                    } @else {
-                        div class="text-center" {
-                            h3 { "the word was: " b { (game.word) } }
-                            (new_game_btn_markup())
-                        }
-                    }
-                }
-
-                (available_letters_markup(&game.get_available_letters()))
-            })
+                })
+            }
         }
         None => base(html! {
             div class="text-center p-2" {
@@ -295,6 +226,74 @@ function removeLetter(data) {
     }
 
     markup
+}
+
+fn game_fragment(game: &Game, query: GuessQuery, valid_word: bool) -> Markup {
+    html! {
+
+        // Is this a guess attempt?
+        @if let Some(guess) = query.guess {
+            // h3 { "Guess: " (guess) }
+
+            @if valid_word == false {
+                // Toast – maybe need to use hx-swap-oob="true"
+                div
+                role="alert"
+                #toast .alert .alert-danger
+                style="position: absolute; top: 10px; left: 10px;"
+                x-data="{ show: true }" x-show="show"
+                x-init="setTimeout(() => show = false, 2000)" "x-transition.duration.500ms"
+                { b { (guess) }" is not a valid word" }
+            }
+        }
+
+        div
+        .m-3
+        x-data="wordleDataObject"
+        "@keydown.window"="addLetter($event.key)" // add letter on `key`
+        "@keydown.backspace.window"="removeLetter()" // remove letter on `backspace`
+        "@click-letter.window"="addLetter($event.detail.letter)" // add letter on `click`
+        "@click-erase.window"="removeLetter()" // remove letter on `click`
+        {
+            @let mut show_dynamic = !game.is_complete();
+            @for guess in &game.get_guesses() {
+                @if let Some(guess) = guess {
+                    (WordState::guess(guess, &game.word))
+                } @else if show_dynamic {
+                    @let _ = show_dynamic = false;
+                    (dynamic_word_markup())
+                } @else {
+                    (WordState::empty())
+                }
+            }
+
+            // The form for guessing.
+            // Note: we replace the entire body, could look into hx-select and target a specific id.
+            @if !game.is_complete() {
+                form
+                #guess-form .text-center
+                hx-get={"/game/"(game.id)}
+                hx-target="#wordle-content"
+                hx-swap="innerHTML"
+                hx-trigger="keydown[keyCode==13] from:body, click-guess from:body" // submit on `enter` or `click`
+                {
+                    input
+                    type="hidden"
+                    x-model="combine"
+                    id="guess"
+                    name="guess"
+                    {}
+                }
+            } @else {
+                div class="text-center" {
+                    h3 { "the word was: " b { (game.word) } }
+                    (new_game_btn_markup())
+                }
+            }
+        }
+
+        (available_letters_markup(&game.get_available_letters()))
+    }
 }
 
 async fn games(State(state): State<Arc<AppState>>) -> Markup {
@@ -321,7 +320,6 @@ async fn games(State(state): State<Arc<AppState>>) -> Markup {
                     @let victory = game.is_victory();
                     @let loss = game.is_loss();
                     @let guesses = game.guesses.len();
-                    @let short_id = game.id.to_string().chars().take(8).collect::<String>();
                     @let last_guess = game.guesses.iter().last();
                     tr .table-warning[victory] .table-danger[loss] .fw-bold[complete] {
                         @if complete {
@@ -336,7 +334,7 @@ async fn games(State(state): State<Arc<AppState>>) -> Markup {
                         }
                         td { (guesses)"/6" }
                         td { (game.created.unwrap().format("%y/%m/%d")) }
-                        td { a hx-boost="true" href={"/game/"(game.id)} { (short_id) } }
+                        td { a hx-boost="true" href={"/game/"(game.id)} { (short_id(game.id)) } }
                     }
                 }
             }
@@ -419,7 +417,7 @@ impl Render for WordState {
 /// The markup for the text that the player is typing (uses alpine)
 fn dynamic_word_markup() -> Markup {
     html! {
-        div class = "d-flex justify-content-center gap-1 mb-1" {
+        div class="d-flex justify-content-center gap-1 mb-1" {
             template x-for="letter in fill" {
                 div
                 .p-2 .bg-light .text-dark .border

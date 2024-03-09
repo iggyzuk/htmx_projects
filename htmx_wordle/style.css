@@ -1,0 +1,11 @@
+body {
+    font-family: 'Roboto Mono', monospace;
+}
+
+th {
+    font-size: 12px;
+}
+
+td {
+    font-size: 10px;
+}
