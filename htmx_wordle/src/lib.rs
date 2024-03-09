@@ -6,21 +6,17 @@ use axum::{
     routing::get,
     Router,
 };
-use constants::LETTERS;
-use game::{Game, GameId};
+use game::{Game, GameId, Letter};
 use maud::{html, Markup, PreEscaped, Render, DOCTYPE};
 use serde::Deserialize;
 use tinyrand::{RandRange, Seeded, StdRand};
 use tokio::sync::RwLock;
 use uuid::Uuid;
-use word::WordState;
 
-use crate::word::LetterState;
+use crate::game::{LetterState, WordState};
 
-mod constants;
 mod game;
 mod storage;
-mod word;
 
 struct AppState {
     words: Vec<&'static str>,
@@ -356,8 +352,8 @@ fn all_games_btn_markup(count: usize) -> Markup {
     html! { button hx-target="#all-games" hx-get="/games" class="btn btn-warning m-2" { "📘 Games " small { (count) } } }
 }
 
-fn available_letters_markup(available: &Vec<char>) -> Markup {
-    let mut chars = LETTERS.chars().collect::<Vec<_>>();
+fn available_letters_markup(available_letters: &HashMap<char, Letter>) -> Markup {
+    let mut chars = game::LETTERS.chars().collect::<Vec<_>>();
     let mut segments = vec![];
 
     segments.push(chars.drain(..10).map(|c| (c, None)).collect::<Vec<_>>());
@@ -382,13 +378,15 @@ fn available_letters_markup(available: &Vec<char>) -> Markup {
                             { (letter.0) }
                         } @else {
                             // Basic buttons – they dispatch events
-                            @let class = if available.contains(&letter.0) {
-                                "p-2 btn btn-primary"
-                            } else {
-                                "p-2 btn btn-secondary"
+                            @let class = match available_letters[&letter.0].state {
+                                LetterState::Correct => "btn btn-success",
+                                LetterState::WrongPlace => "btn btn-warning",
+                                LetterState::Wrong => "btn btn-secondary",
+                                LetterState::Empty => "btn btn-primary",
                             };
+
                             div
-                            class=(class)
+                            class={"p-2 " (class)}
                             "@mousedown"={"$dispatch('click-letter', { letter: '"(letter.0)"' })"}
                             { (letter.0) }
                         }
@@ -399,31 +397,26 @@ fn available_letters_markup(available: &Vec<char>) -> Markup {
     }
 }
 
+/// The markup for a word-state, it shows which letters are correct, are in wrong place, or simply wrong.
 impl Render for WordState {
     fn render(&self) -> Markup {
         html! {
             div class = "d-flex justify-content-center gap-1 mb-1" {
                 @for letter in &self.letters {
-                    @match letter.state {
-                        LetterState::Correct => {
-                            div class="p-2 bg-success text-white border" { (letter.id) }
-                        },
-                        LetterState::WrongPlace => {
-                            div class="p-2 bg-warning text-white border" { (letter.id) }
-                        },
-                        LetterState::Wrong => {
-                            div class="p-2 bg-secondary text-white border" { (letter.id) }
-                        },
-                        LetterState::Empty => {
-                            div class="p-2 bg-light text-dark border" { (letter.id) }
-                        }
-                    }
+                    @let class = match letter.state {
+                        LetterState::Correct => "bg-success",
+                        LetterState::WrongPlace => "bg-warning",
+                        LetterState::Wrong => "bg-secondary",
+                        LetterState::Empty => "bg-light",
+                    };
+                    div class={"p-2 text-white border " (class)} { (letter.id) }
                 }
             }
         }
     }
 }
 
+/// The markup for the text that the player is typing (uses alpine)
 fn dynamic_word_markup() -> Markup {
     html! {
         div class = "d-flex justify-content-center gap-1 mb-1" {

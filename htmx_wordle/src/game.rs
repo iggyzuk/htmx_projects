@@ -1,8 +1,9 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use std::collections::{HashMap, HashSet};
 use uuid::Uuid;
 
-use crate::constants::LETTERS;
+pub const LETTERS: &'static str = "qwertyuiopasdfghjklzxcvbnm";
 
 pub type GameId = Uuid;
 
@@ -52,24 +53,124 @@ impl Game {
         result
     }
 
-    pub fn get_available_letters(&self) -> Vec<char> {
-        let mut letters = LETTERS.chars().collect::<Vec<_>>();
+    pub fn get_available_letters(&self) -> HashMap<char, Letter> {
+        let mut letter_map: HashMap<char, Letter> = HashMap::new();
 
-        let used_chars = self.guesses.iter().flat_map(|x| x.chars());
+        self.guesses
+            .iter()
+            .map(|guess| WordState::guess(guess, &self.word))
+            .flat_map(|state| state.letters)
+            .for_each(|letter| {
+                if let Some(existing_letter) = letter_map.get_mut(&letter.id) {
+                    // New letter state is better than the previous? e.g. Correct > WrongPlace
+                    if letter.state > existing_letter.state {
+                        letter_map.insert(letter.id, letter);
+                    }
+                } else {
+                    letter_map.insert(letter.id, letter);
+                }
+            });
 
-        for used_char in used_chars {
-            if letters.contains(&used_char) {
-                letters.retain(|&c| c != used_char);
+        // Add all other characters (they're all empty)
+        LETTERS.chars().for_each(|ch| {
+            if !letter_map.contains_key(&ch) {
+                letter_map.insert(ch, Letter::new(ch, LetterState::Empty));
             }
-        }
+        });
 
-        letters
+        letter_map
+    }
+}
+
+pub struct WordState {
+    pub letters: Vec<Letter>,
+}
+
+impl WordState {
+    pub fn empty() -> Self {
+        Self {
+            letters: vec![
+                Letter::new('-', LetterState::Empty),
+                Letter::new('-', LetterState::Empty),
+                Letter::new('-', LetterState::Empty),
+                Letter::new('-', LetterState::Empty),
+                Letter::new('-', LetterState::Empty),
+            ],
+        }
+    }
+
+    pub fn guess(guess: &String, word: &String) -> WordState {
+        let mut duplicates = HashSet::new();
+        let letters = guess
+            .to_lowercase()
+            .chars()
+            .enumerate()
+            .map(|(position, letter)| {
+                if word.chars().nth(position).unwrap() == letter {
+                    Letter::new(letter, LetterState::Correct)
+                } else if word.contains(letter) && !duplicates.contains(&letter) {
+                    duplicates.insert(letter);
+                    Letter::new(letter, LetterState::WrongPlace)
+                } else {
+                    Letter::new(letter, LetterState::Wrong)
+                }
+            })
+            .collect::<Vec<_>>();
+
+        WordState { letters }
+    }
+}
+
+#[derive(PartialEq, Eq, Debug)]
+pub struct Letter {
+    pub id: char,
+    pub state: LetterState,
+}
+
+impl Letter {
+    fn new(id: char, state: LetterState) -> Self {
+        Self { id, state }
+    }
+}
+
+#[derive(PartialEq, Eq, Debug, Ord)]
+pub enum LetterState {
+    Correct,
+    WrongPlace,
+    Wrong,
+    Empty,
+}
+
+impl PartialOrd for LetterState {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        // Note: compare in reverse so that we can do: Correct(0) > Wrong(1)
+        Some(other.cmp(self))
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn guess_word_into_state() {
+        let state = WordState::guess(&"smell".to_string(), &"state".to_string());
+        assert_eq!(state.letters[0].state, LetterState::Correct);
+        assert_eq!(state.letters[1].state, LetterState::Wrong);
+        assert_eq!(state.letters[2].state, LetterState::WrongPlace);
+        assert_eq!(state.letters[3].state, LetterState::Wrong);
+        assert_eq!(state.letters[4].state, LetterState::Wrong);
+    }
+
+    #[test]
+    fn guess_with_double_letter_into_word_state() {
+        let state = WordState::guess(&"smell".to_string(), &"slate".to_string());
+        assert_eq!(state.letters[0].state, LetterState::Correct);
+        assert_eq!(state.letters[1].state, LetterState::Wrong);
+        assert_eq!(state.letters[2].state, LetterState::WrongPlace);
+        assert_eq!(state.letters[3].state, LetterState::WrongPlace); // First 'l' was here
+        assert_eq!(state.letters[4].state, LetterState::Wrong); // Duplicate 'l' is considered wrong
+    }
 
     #[test]
     fn quick_victory() {

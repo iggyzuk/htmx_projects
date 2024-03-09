@@ -7,7 +7,9 @@ use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
 };
 
-use crate::{constants::SAVE_DATA_PATH, game::Game};
+use crate::game::Game;
+
+pub const SAVE_DATA_PATH: &'static str = "data/save_data.json";
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct SaveData {
