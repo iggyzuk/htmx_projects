@@ -3,9 +3,9 @@ use std::sync::Arc;
 use axum::{
     extract::{Path, State},
     http::{Method, StatusCode},
-    response::IntoResponse,
+    response::{IntoResponse, Response},
     routing::{delete, get, post, put},
-    Form,
+    Form, Router,
 };
 use maud::{html, Markup, Render, DOCTYPE};
 use serde::Deserialize;
@@ -21,9 +21,9 @@ impl AppState {
     fn new() -> Arc<Self> {
         let mut tasks = vec![];
         tasks.push(Task::new("Learn how to be epic with htmx".to_string()));
-        tasks.push(Task::new("Add the ability to edit these tasks".to_string()));
-        tasks.push(Task::new("Make this crud experiement prettier".to_string()));
-        tasks.push(Task::new("Take over the world".to_string()));
+        tasks.push(Task::new_done("Add the ability to edit these tasks".to_string()));
+        tasks.push(Task::new_done("Make this crud experiement prettier".to_string()));
+        tasks.push(Task::new("Take over the world (break it up in simpler tasks)".to_string()));
         tasks.push(Task::new_done("Become enlightened ✨".to_string()));
 
         Arc::new(AppState {
@@ -40,6 +40,9 @@ impl Tasks {
     }
     fn read(&self, id: Uuid) -> Option<&Task> {
         self.0.iter().find(|t| t.id == id)
+    }
+    fn read_mut(&mut self, id: Uuid) -> Option<&mut Task> {
+        self.0.iter_mut().find(|t| t.id == id)
     }
     fn update(&mut self, id: Uuid) {
         if let Some(task) = self.0.iter_mut().find(|t| t.id == id) {
@@ -83,13 +86,17 @@ async fn main() {
         // allow requests from any origin
         .allow_origin(Any);
 
-    let app = axum::Router::new()
+    let task_routes = Router::new()
+        .route("/", post(create_task))
+        .route("/:id", get(read_task))
+        .route("/:id", put(update_task))
+        .route("/:id", delete(delete_task))
+        .route("/:id/edit", get(get_edit_task))
+        .route("/:id/edit", post(post_edit_task));
+
+    let app = Router::new()
         .route("/", get(index))
-        .route("/task", post(create_task))
-        .route("/task/:id", get(read_task))
-        .route("/task/:id", put(update_task))
-        .route("/task/:id", delete(delete_task))
-        .route("/task/:id/edit", get(get_edit_task))
+        .nest("/task", task_routes)
         .route("/tasks", get(tasks))
         .layer(cors)
         .with_state(AppState::new());
@@ -113,10 +120,12 @@ async fn index() -> Markup {
                 meta charset="utf-8";
                 title { "CRUD in HTMX" }
                 link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css";
+                script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous" {}
                 script src="https://unpkg.com/htmx.org@1.9.10" {}
             }
             body {
                 .container {
+                    
                     .card .m-3 {
                         h5 .card-header { "CRUD in HTMX" }
                         .card-body {
@@ -161,14 +170,14 @@ async fn create_task(
     (StatusCode::CREATED, tasks.render())
 }
 
-async fn read_task(State(state): State<Arc<AppState>>, Path(id): Path<Uuid>) -> impl IntoResponse {
+async fn read_task(State(state): State<Arc<AppState>>, Path(id): Path<Uuid>) -> Response {
     let tasks = state.tasks.read().await;
     let task = tasks.read(id);
 
     if let Some(task) = task {
         return task.render().into_response();
     }
-    (StatusCode::GONE, "task doesn't exist").into_response()
+    (StatusCode::NOT_FOUND, "task doesn't exist").into_response()
 }
 
 async fn update_task(State(state): State<Arc<AppState>>, Path(id): Path<Uuid>) -> Markup {
@@ -187,11 +196,86 @@ async fn tasks(State(state): State<Arc<AppState>>) -> Markup {
     state.tasks.read().await.render()
 }
 
-// todo: replace task title with edit + add save/cancel buttons
-async fn get_edit_task(State(state): State<Arc<AppState>>) -> Markup {
-    html! {
-        "Edit"
+async fn get_edit_task(State(state): State<Arc<AppState>>, Path(id): Path<Uuid>) -> Response {
+    let tasks = state.tasks.read().await;
+    if let Some(task) = tasks.read(id) {
+        return html! {
+            form hx-post={"/task/"(task.id)"/edit"} hx-target={"#task_"(task.id)} hx-swap="outerHTML" .w-100 {
+
+                div ."input-group" {
+
+                    // Input value for modified task title
+                    input
+                    id="title"
+                    name="title"
+                    class="form-control"
+                    placeholder="Title"
+                    value=(task.title)
+                    type="text"
+                    aria-label="Text input with segmented dropdown button"
+                    {}
+
+                    // Save button (submits the form)
+                    button
+                    ."btn btn-outline-primary"
+                    type="submit"
+                    { "Save" }
+
+                    // Dropdown button for extra options
+                    button ."btn btn-outline-primary dropdown-toggle dropdown-toggle-split"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                    type="button" {
+                        span ."visually-hidden" {
+                            "Toggle Dropdown"
+                        }
+                    }
+
+                    // Dropdown options
+                    ul ."dropdown-menu dropdown-menu-end" {
+
+                        // Cancel the edit (and show the old task)
+                        li {
+                            .dropdown-item 
+                            type="button"
+                            hx-get={"/task/"(task.id)}
+                            hx-target={"#task_"(task.id)}
+                            { "Cancel" }
+                        }
+
+                        // Delete the task (and update all tasks)
+                        li {
+                            ."dropdown-item text-danger"
+                            type="button"
+                            hx-delete={"/task/"(task.id)}
+                            hx-trigger="click"
+                            hx-target="#task-list"
+                            hx-swap="innerHTML"
+                            { "Delete" }
+                        }
+                    }
+                }
+            }
+        }.into_response();
     }
+    (StatusCode::NOT_FOUND, "task doesn't exist").into_response()
+}
+
+#[derive(Deserialize)]
+struct EditTaskForm {
+    title: String,
+}
+
+async fn post_edit_task(
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<Uuid>,
+    Form(query): Form<EditTaskForm>,
+) -> Response {
+    if let Some(task) = state.tasks.write().await.read_mut(id) {
+        task.title = query.title;
+        return task.render().into_response();
+    }
+    (StatusCode::NOT_FOUND, "task doesn't exist").into_response()
 }
 
 impl Render for Tasks {
@@ -199,7 +283,7 @@ impl Render for Tasks {
         html! {
             ul class="list-group list-group-flush" {
                 @for task in self.0.iter() {
-                    li .d-flex .justify-content-between .align-items-center .list-group-item {
+                    li .list-group-item {
                         (&task)
                     }
                 }
@@ -211,35 +295,40 @@ impl Render for Tasks {
 impl Render for Task {
     fn render(&self) -> Markup {
         html! {
-            // check combo
-            div class="form-check form-switch" {
+            #{"task_"(self.id)} .d-flex .justify-content-between .align-items-center {
+                // check combo
+                div class="form-check form-switch" {
 
-                // complete: input (checkbox)
-                input
-                type="checkbox"
-                role="switch"
-                id={"task_"(self.id)}
-                .form-check-input
-                checked[self.complete]
-                hx-put={"/task/"(self.id)}
-                hx-trigger="click"
-                hx-target="#task-list"
-                {}
+                    // complete: input (checkbox)
+                    input
+                    type="checkbox"
+                    role="switch"
+                    id={"task_"(self.id)"_input"}
+                    .form-check-input
+                    checked[self.complete]
+                    hx-put={"/task/"(self.id)}
+                    hx-trigger="click"
+                    hx-target="#task-list"
+                    {}
 
-                // title: label
-                label
-                .form-check-label
-                for={"task_"(self.id)}
-                { (self.title) }
+                    // title: label
+                    label
+                    id={"task_"(self.id)"_label"} // this can be made reusable
+                    .form-check-label
+                    for={"task_"(self.id)"_input"}
+                    { (self.title) }
+                }
+
+                .d-flex .no-wrap {
+                    // edit: button
+                    button
+                    .btn .btn-outline-warning .me-1
+                    hx-get={"/task/"(self.id)"/edit"}
+                    hx-trigger="click"
+                    hx-target={"#task_"(self.id)}
+                    { "Edit" }
+                }
             }
-
-            // delete: button
-            button
-            .btn .btn-danger
-            hx-delete={"/task/"(self.id)}
-            hx-trigger="click"
-            hx-target="#task-list"
-            { "Delete" }
         }
     }
 }
