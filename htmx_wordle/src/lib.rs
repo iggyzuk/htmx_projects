@@ -1,9 +1,10 @@
 use std::{collections::HashMap, sync::Arc, time::SystemTime};
 
 use axum::{
+    body::Body,
     extract::{Path, Query, State},
-    http::HeaderMap,
-    response::{IntoResponse, Redirect},
+    http::{HeaderMap, StatusCode},
+    response::Response,
     routing::get,
     Router,
 };
@@ -134,7 +135,7 @@ async fn index(State(state): State<Arc<AppState>>) -> Markup {
     })
 }
 
-async fn new_game(State(state): State<Arc<AppState>>) -> impl IntoResponse {
+async fn new_game(State(state): State<Arc<AppState>>) -> Response {
     // Pick a random word.
     let seed = SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
@@ -148,10 +149,12 @@ async fn new_game(State(state): State<Arc<AppState>>) -> impl IntoResponse {
     // Create a new game with a unique id.
     let id = Uuid::new_v4();
 
+    let game = Game::new(id, word.clone());
+
     // Drop write lock at end of block
     {
         let mut games = state.games.write().await;
-        games.insert(id, Game::new(id, word.clone()));
+        games.insert(id, game);
     }
 
     // Save state with new game
@@ -162,8 +165,16 @@ async fn new_game(State(state): State<Arc<AppState>>) -> impl IntoResponse {
 
     println!("id: {id}, word: {word}");
 
-    // Redirect to: /game/uuid
-    Redirect::to(format!("/game/{}", id).as_str())
+    // HX-Location
+    // This response header can be used to trigger a client side redirection without
+    // reloading the whole page. Instead of changing the page’s location it will act
+    // like following a hx-boost link, creating a new history entry, issuing an ajax
+    // request to the value of the header and pushing the path into history.
+    Response::builder()
+        .status(StatusCode::CREATED)
+        .header("HX-Location", format!("/game/{id}"))
+        .body(Body::empty())
+        .unwrap()
 }
 
 #[derive(Deserialize)]
@@ -197,7 +208,7 @@ async fn game(
             }
 
             // Send the fragment or the full page.
-            let fragment = game_fragment(&game, query, valid_word);
+            let fragment = game_fragment(&game, query.guess, valid_word);
             if is_fragment {
                 fragment
             } else {
@@ -219,7 +230,7 @@ async fn game(
         }),
     };
 
-    // Save the state after the write lock is dropped
+    // Save the state after each guess
     match storage::save(state.get_save_data().await).await {
         Ok(_) => {}
         Err(err) => panic!("{err}"),
@@ -228,11 +239,11 @@ async fn game(
     markup
 }
 
-fn game_fragment(game: &Game, query: GuessQuery, valid_word: bool) -> Markup {
+fn game_fragment(game: &Game, guess: Option<String>, valid_word: bool) -> Markup {
     html! {
 
         // Is this a guess attempt?
-        @if let Some(guess) = query.guess {
+        @if let Some(guess) = guess {
             // h3 { "Guess: " (guess) }
 
             @if valid_word == false {
@@ -343,7 +354,7 @@ async fn games(State(state): State<Arc<AppState>>) -> Markup {
 }
 
 fn new_game_btn_markup() -> Markup {
-    html! { button hx-target="body" hx-push-url="true" hx-get="/new_game" class="btn btn-primary m-2" { "⭐️ Play" } }
+    html! { button hx-get="/new_game" hx-target="body" class="btn btn-primary m-2" { "⭐️ Play" } }
 }
 
 fn all_games_btn_markup(count: usize) -> Markup {
