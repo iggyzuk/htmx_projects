@@ -1,11 +1,7 @@
 use std::sync::Arc;
 
 use axum::{
-    extract::{Path, State},
-    http::{Method, StatusCode},
-    response::{IntoResponse, Response},
-    routing::{delete, get, post, put},
-    Form, Router,
+    body::Body, extract::{Path, State}, http::{Method, StatusCode}, response::{IntoResponse, Response}, routing::{delete, get, post, put}, Form, Router
 };
 use maud::{html, Markup, PreEscaped, Render, DOCTYPE};
 use serde::Deserialize;
@@ -114,7 +110,8 @@ async fn index() -> Markup {
         html {
             head {
                 meta charset="utf-8";
-                title { "CRUD in HTMX" }
+                meta name="viewport" content="width=device-width, initial-scale=1";
+                title { "CRUD (htmx)" }
                 link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css";
                 script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous" {}
                 script src="https://unpkg.com/htmx.org@1.9.10" {}
@@ -126,7 +123,7 @@ async fn index() -> Markup {
                 .container {
                     
                     .card .m-3 {
-                        h5 .card-header { "CRUD in HTMX" }
+                        h5 .card-header { "Tasks" }
                         .card-body {
                             // main form to create tasks
                             form hx-post="/task" hx-target="#task-list" {
@@ -195,10 +192,10 @@ async fn update_task(State(state): State<Arc<AppState>>, Path(id): Path<Uuid>) -
     (StatusCode::NOT_FOUND, "task doesn't exist").into_response()
 }
 
-async fn delete_task(State(state): State<Arc<AppState>>, Path(id): Path<Uuid>) -> Markup {
+async fn delete_task(State(state): State<Arc<AppState>>, Path(id): Path<Uuid>) -> impl IntoResponse {
     let mut tasks = state.tasks.write().await;
     tasks.delete(id);
-    tasks.render()
+    (StatusCode::OK, Body::empty())
 }
 
 async fn tasks(State(state): State<Arc<AppState>>) -> Markup {
@@ -258,11 +255,11 @@ async fn get_edit_task(State(state): State<Arc<AppState>>, Path(id): Path<Uuid>)
                         li {
                             ."dropdown-item text-danger"
                             type="button"
+                            hx-trigger="click"
                             hx-confirm="Are you sure you want to delete this task?"
                             hx-delete={"/task/"(task.id)}
-                            hx-trigger="click"
-                            hx-target="#task-list"
-                            hx-swap="innerHTML"
+                            hx-target="closest .li-task"
+                            hx-swap="delete"
                             { "Delete" }
                         }
                     }
@@ -295,7 +292,7 @@ impl Render for Tasks {
         html! {
             ul class="list-group list-group-flush" {
                 @for task in self.0.iter() {
-                    li .list-group-item {
+                    li .li-task .list-group-item {
                         (&task)
                     }
                 }
