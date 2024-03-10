@@ -58,6 +58,8 @@ fn base(content: Markup) -> Markup {
         html {
             head {
                 meta charset="utf-8";
+                meta name="viewport" content="width=device-width, initial-scale=1";
+                title { "Infinite Scroll (htmx)" }
                 script src="https://unpkg.com/htmx.org@1.9.10" {}
                 style { (style) }
             }
