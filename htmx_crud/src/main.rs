@@ -7,7 +7,7 @@ use axum::{
     routing::{delete, get, post, put},
     Form, Router,
 };
-use maud::{html, Markup, Render, DOCTYPE};
+use maud::{html, Markup, PreEscaped, Render, DOCTYPE};
 use serde::Deserialize;
 use tokio::sync::RwLock;
 use tower_http::cors::{Any, CorsLayer};
@@ -108,6 +108,7 @@ async fn main() {
 }
 
 async fn index() -> Markup {
+    let scripts = PreEscaped(include_str!("../scripts.js"));
     html! {
         (DOCTYPE)
         html {
@@ -118,6 +119,8 @@ async fn index() -> Markup {
                 script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous" {}
                 script src="https://unpkg.com/htmx.org@1.9.10" {}
                 script src="https://unpkg.com/htmx.org/dist/ext/disable-element.js" {}
+                script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" {}
+                script { (scripts) }
             }
             body {
                 .container {
@@ -151,6 +154,8 @@ async fn index() -> Markup {
                         }
                     }
                 }
+
+                (confirm_modal_markup())
             }
         }
     }
@@ -253,6 +258,7 @@ async fn get_edit_task(State(state): State<Arc<AppState>>, Path(id): Path<Uuid>)
                         li {
                             ."dropdown-item text-danger"
                             type="button"
+                            hx-confirm="Are you sure you want to delete this task?"
                             hx-delete={"/task/"(task.id)}
                             hx-trigger="click"
                             hx-target="#task-list"
@@ -338,6 +344,39 @@ impl Render for Task {
                     hx-ext="disable-element"
                     hx-disable-element="self"
                     { "Edit" }
+                }
+            }
+        }
+    }
+}
+
+fn confirm_modal_markup() -> Markup {
+    html! {
+        div."modal fade" id="confirm-modal" role="dialog" aria-hidden="true" tabindex="-1" aria-labelledby="confirm-modal-label" {
+            div."modal-dialog modal-dialog-centered" role="document" {
+                div."modal-content" {
+                    div."modal-header" {
+                        // Title
+                        h5."modal-title" id="confirm-modal-label" {
+                            "Delete Task"
+                        }
+                        // X button to close the modal
+                        button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" {}
+                    }
+                    // Are you sure you want to delete...
+                    div."modal-body" {
+                        p #confirm-modal-text {}
+                    }
+                    div."modal-footer" {
+                        // Cancel delete
+                        button."btn btn-secondary" #confirm-modal-cancel type="button" data-bs-dismiss="modal" {
+                            "Cancel"
+                        }
+                        // Confirm delete
+                        button."btn btn-danger" #confirm-modal-proceed type="button" {
+                            "Delete"
+                        }
+                    }
                 }
             }
         }
