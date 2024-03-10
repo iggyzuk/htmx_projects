@@ -44,11 +44,6 @@ impl Tasks {
     fn read_mut(&mut self, id: Uuid) -> Option<&mut Task> {
         self.0.iter_mut().find(|t| t.id == id)
     }
-    fn update(&mut self, id: Uuid) {
-        if let Some(task) = self.0.iter_mut().find(|t| t.id == id) {
-            task.complete = !task.complete;
-        }
-    }
     fn delete(&mut self, id: Uuid) {
         self.0.retain(|t| t.id != id);
     }
@@ -122,6 +117,7 @@ async fn index() -> Markup {
                 link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css";
                 script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous" {}
                 script src="https://unpkg.com/htmx.org@1.9.10" {}
+                script src="https://unpkg.com/htmx.org/dist/ext/disable-element.js" {}
             }
             body {
                 .container {
@@ -129,9 +125,10 @@ async fn index() -> Markup {
                     .card .m-3 {
                         h5 .card-header { "CRUD in HTMX" }
                         .card-body {
-                            // main form
+                            // main form to create tasks
                             form hx-post="/task" hx-target="#task-list" {
                                 div class="input-group mb-3" {
+                                    
                                     // task name input
                                     input
                                     id="title"
@@ -140,10 +137,13 @@ async fn index() -> Markup {
                                     class="form-control"
                                     placeholder="What would you like to do?"
                                     aria-label="Task name"
-                                    aria-describedby="button-addon2"
                                     {}
+
                                     // submit button
-                                    button type="submit" class="btn btn-outline-secondary" id="button-addon2" { "Create Task" }
+                                    button
+                                    type="submit"
+                                    class="btn btn-outline-primary"
+                                    { "Create Task" }
                                 }
                             }
                             // all tasks
@@ -180,10 +180,14 @@ async fn read_task(State(state): State<Arc<AppState>>, Path(id): Path<Uuid>) -> 
     (StatusCode::NOT_FOUND, "task doesn't exist").into_response()
 }
 
-async fn update_task(State(state): State<Arc<AppState>>, Path(id): Path<Uuid>) -> Markup {
+async fn update_task(State(state): State<Arc<AppState>>, Path(id): Path<Uuid>) -> Response {
     let mut tasks = state.tasks.write().await;
-    tasks.update(id);
-    tasks.render()
+
+    if let Some(task) = tasks.0.iter_mut().find(|t| t.id == id) {
+        task.complete = !task.complete;
+        return task.render().into_response();
+    }
+    (StatusCode::NOT_FOUND, "task doesn't exist").into_response()
 }
 
 async fn delete_task(State(state): State<Arc<AppState>>, Path(id): Path<Uuid>) -> Markup {
@@ -219,6 +223,8 @@ async fn get_edit_task(State(state): State<Arc<AppState>>, Path(id): Path<Uuid>)
                     button
                     ."btn btn-outline-primary"
                     type="submit"
+                    hx-ext="disable-element"
+                    hx-disable-element="self"
                     { "Save" }
 
                     // Dropdown button for extra options
@@ -308,7 +314,10 @@ impl Render for Task {
                     checked[self.complete]
                     hx-put={"/task/"(self.id)}
                     hx-trigger="click"
-                    hx-target="#task-list"
+                    hx-target={"#task_"(self.id)}
+                    hx-swap="outerHTML"
+                    hx-ext="disable-element"
+                    hx-disable-element="self"
                     {}
 
                     // title: label
@@ -326,6 +335,8 @@ impl Render for Task {
                     hx-get={"/task/"(self.id)"/edit"}
                     hx-trigger="click"
                     hx-target={"#task_"(self.id)}
+                    hx-ext="disable-element"
+                    hx-disable-element="self"
                     { "Edit" }
                 }
             }
