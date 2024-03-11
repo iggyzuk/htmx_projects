@@ -126,7 +126,7 @@ async fn index() -> Markup {
                         h5 .card-header { "Tasks" }
                         .card-body {
                             // main form to create tasks
-                            form hx-post="/task" hx-target="#task-list" {
+                            form hx-post="/task" hx-target="#task-list" autocomplete="off" {
                                 div class="input-group mb-3" {
                                     
                                     // task name input
@@ -206,7 +206,7 @@ async fn get_edit_task(State(state): State<Arc<AppState>>, Path(id): Path<Uuid>)
     let tasks = state.tasks.read().await;
     if let Some(task) = tasks.read(id) {
         return html! {
-            form hx-post={"/task/"(task.id)"/edit"} hx-target={"#task_"(task.id)} hx-swap="outerHTML" .w-100 {
+            form hx-post={"/task/"(task.id)"/edit"} hx-target={"#task_"(task.id)} hx-swap="outerHTML" autocomplete="off" .w-100  {
 
                 div ."input-group" {
 
