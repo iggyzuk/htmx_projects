@@ -7,5 +7,8 @@ wordle:
 crud:
 	cargo watch -x 'run --bin htmx_crud'
 
+router:
+	cargo watch -x 'run --bin htmx_router'
+
 deploy:
 	fly deploy

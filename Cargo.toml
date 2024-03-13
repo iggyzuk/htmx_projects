@@ -1,5 +1,5 @@
 [workspace]
-members = ["htmx_crud", "htmx_infinite_scroll", "htmx_wordle"]
+members = ["htmx_crud", "htmx_infinite_scroll", "htmx_router", "htmx_wordle"]
 resolver = "2"
 
 [workspace.dependencies]
@@ -13,3 +13,4 @@ tinyrand = "0.5.0"
 uuid = { version = "1.7.0", features = ["v4"] }
 chrono = { version = "0.4.35", features = ["serde"] }
 thiserror = { version = "1.0.57" }
+toml = "0.8.11"
