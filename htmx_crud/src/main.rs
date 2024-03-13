@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use axum::{
-    body::Body, extract::{Path, State}, http::{Method, StatusCode}, response::{IntoResponse, Response}, routing::{delete, get, post, put}, Form, Router
+    body::Body, extract::{Path, State}, http::{Method, StatusCode}, response::{IntoResponse, Response}, routing::{get, post}, Form, Router
 };
 use maud::{html, Markup, PreEscaped, Render, DOCTYPE};
 use serde::Deserialize;
@@ -79,11 +79,8 @@ async fn main() {
 
     let task_routes = Router::new()
         .route("/", post(create_task))
-        .route("/:id", get(read_task))
-        .route("/:id", put(update_task))
-        .route("/:id", delete(delete_task))
-        .route("/:id/edit", get(get_edit_task))
-        .route("/:id/edit", post(post_edit_task));
+        .route("/:id", get(read_task).put(update_task).delete(delete_task))
+        .route("/:id/edit", get(get_edit_task).post(post_edit_task));
 
     let app = Router::new()
         .route("/", get(index))
@@ -116,7 +113,6 @@ async fn index() -> Markup {
                 script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous" {}
                 script src="https://unpkg.com/htmx.org@1.9.10" {}
                 script src="https://unpkg.com/htmx.org/dist/ext/disable-element.js" {}
-                script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" {}
                 script { (scripts) }
             }
             body {
