@@ -66,15 +66,15 @@ pub(crate) fn home() -> Markup {
     let iggyzuk = PreEscaped("<a href='http://iggyzuk.com' target='_blank'>Iggy Zuk</a>");
 
     html! {
-        h1 {"Welcome!"}
+        h1 { "Welcome!" }
 
-        p { "This website demonstrates seamless routing using htmx. It supports responses as fragments and full-pages. It reads " b .font-monospace { "hx-request" } " from the headers of the request to decide wether to send a fragment or a full page." }
+        p { "This website demonstrates seamless routing using htmx. It supports responses as fragments and full pages. It reads " b .font-monospace { "hx-request" } " from the headers of the request to decide whether to send a fragment or a full page." }
 
-        p { "For example if you go to: " a href="/heroes" { "/heroes" } " only the router content changes (this whole div). The header and the footer stay the same. Take a look at the network responses."}
+        p { "For example, if you go to: " a href="/heroes" { "/heroes" } ", only the router content changes – this div with the text you're reading now. The header and the footer stay the same. Take a look at the network responses." }
 
-        p { "To make things more interesting there's a sub-router inside of the hero page." }
+        p { "To make things more interesting, there's a sub-router inside the hero page." }
 
-        p { "For example going to: " a href="/kelthuzad/talents" hx-target="body" { "/kelthuzad/talents" } " will auto-select the talents tab. If you change the tab to description and refresh the page the full-page will be sent back with the correct tab selected." }
+        p { "For example, going to: " a href="/kelthuzad/talents" hx-target="body" { "/kelthuzad/talents" } " will auto-select the talents tab. If you change the tab and refresh the page, the full page will be sent back with the correct tab selected." }
 
         small { "Made with "(htmx)", "(rust)", "(axum)", "(maud)", and "(bootstrap)" by "(iggyzuk) }
     }
@@ -89,7 +89,7 @@ pub(crate) fn navbar() -> Markup {
             div."container-fluid" {
 
                 a."navbar-brand" href="/"
-                { "Routing (htmx)"}
+                { (icon_text("transparency", "Routing (htmx)")) }
 
                 div .d-flex .justify-content-center .gap-2 {
 
@@ -211,7 +211,7 @@ pub(crate) fn hero(hero: &Hero, content: Markup) -> Markup {
             }
         }
 
-        img ."img-fluid d-block mx-auto" src=(hero.icon);
+        img ."img-fluid d-block mx-auto rounded" src=(hero.icon);
 
         // This is the card-router
         div
