@@ -45,11 +45,12 @@ pub(crate) fn router(content: Markup) -> Markup {
     base(html! {
         (navbar())
         hr;
-        .container hx-boost="true" {
+        .container {
             // all child links will target the #router-content (using inheritance)
             div
             id=(ROUTER_CONTENT)
             hx-target=(ROUTER_CONTENT_ID)
+            hx-boost="true"
             { (content) }
         }
         hr;
@@ -74,7 +75,7 @@ pub(crate) fn home() -> Markup {
 
         p { "To make things more interesting, there's a sub-router inside the hero page." }
 
-        p { "For example, going to: " a href="/kelthuzad/talents" hx-target="body" { "/kelthuzad/talents" } " will auto-select the talents tab. If you change the tab and refresh the page, the full page will be sent back with the correct tab selected." }
+        p { "For example, going to: " a href="/kelthuzad/talents" hx-target=(ROUTER_CONTENT_ID) { "/kelthuzad/talents" } " will auto-select the talents tab. If you change the tab and refresh the page, the full page will be sent back with the correct tab selected." }
 
         small { "Made with "(htmx)", "(rust)", "(axum)", "(maud)", and "(bootstrap)" by "(iggyzuk) }
     }
@@ -85,7 +86,7 @@ pub(crate) fn home() -> Markup {
 pub(crate) fn navbar() -> Markup {
     html! {
         // note: buttons in nav-bar target the #router-content (using inheritance)
-        nav."navbar navbar-expand-lg bg-body-tertiary" hx-target=(ROUTER_CONTENT_ID)hx-push-url="true" {
+        nav."navbar navbar-expand-lg bg-body-tertiary" hx-target=(ROUTER_CONTENT_ID) hx-push-url="true" hx-boost="true" {
             div."container-fluid" {
 
                 a."navbar-brand" href="/"
