@@ -615,3 +615,298 @@ level = 13
 name = "GG, WP"
 desc = "Each time a Hero deals damage to you, reduce the cooldown of Defense Matrix by 0.25 seconds. Type: Offensive, Defensive"
 level = 20
+
+# --------------------
+
+[[heroes]]
+name = "THE LOST VIKINGS"
+desc = "Olaf, Baleog, and Eric, the Lost Vikings, each boast their own unique abilities. The key to playing the Vikings well is to carefully manage all three characters, utilizing their distinct skills to maximize their effectiveness."
+icon = "https://static.heroesofthestorm.com/images/hero-select/card-portraits/the-lost-vikings-0d5640dfde.jpg"
+universe = "Blizzard Classic"
+
+[[heroes.abilities]]
+name = "Travel"
+desc = "Activate to have all Vikings become Unstoppable and gain a 30% Movement Speed bonus for 3 seconds."
+[[heroes.abilities]]
+name = "Spin to Win!"
+desc = "Activate to cause each Viking to deal 128 (+4% per level) damage to nearby enemies."
+[[heroes.abilities]]
+name = "Norse Force!"
+desc = "Activate to have each Viking gain a 200 (+4% per level) to 350 (+4% per level) point Shield, increasing in strength for each Viking alive."
+[[heroes.abilities]]
+name = "Longboat Raid!"
+desc = "Hop into an Unstoppable Longboat that fires at nearby enemies for 112 (+4% per level) damage per second and can fire a mortar that deals 228 (+4% per level) damage in an area. The boat has increased Health for each Viking inside. If the boat is destroyed by enemies, all Vikings are Stunned for 1.5 seconds."
+[[heroes.abilities]]
+name = "Play Again!"
+desc = "Summon, fully heal, and revive all Lost Vikings at target location after a Viking channels for 2 seconds."
+
+[[heroes.talents]]
+name = "Spy Games"
+desc = "Erik moves 10% faster and can pass through enemies."
+level = 1
+[[heroes.talents]]
+name = "Explosive Attacks"
+desc = "Baleog's Basic Attacks deal 100% bonus splash damage to non-Heroes."
+level = 1
+[[heroes.talents]]
+name = "Pain Don't Hurt"
+desc = "Olaf gains 20% increased Health and regenerates Health 50% faster."
+level = 1
+
+[[heroes.talents]]
+name = "It's a Sabotage!"
+desc = "After channeling for 1 second, Erik can sabotage a nearby enemy Structure, causing it to have 50% less Health and deal 50% less damage for 6 seconds."
+level = 4
+[[heroes.talents]]
+name = "Baleog the Fierce"
+desc = "Baleog's Basic Attacks increase his Attack Speed by 8% for 3 seconds, stacking up to 5 times."
+level = 4
+[[heroes.talents]]
+name = "Erik the Swift"
+desc = "Erik moves 10% faster at all times. After avoiding 3 Basic Attacks, Erik's Movement Speed is increased by 30% for 3 seconds."
+level = 4
+
+[[heroes.talents]]
+name = "Viking Bribery"
+desc = "Enemy Minions or captured Mercenaries killed near The Lost Vikings grant stacks of Bribe. Use 40 stacks to bribe target Mercenary, instantly defeating them. Does not work on Elite Mercenaries. Maximum of 100 stacks can be held."
+level = 7
+[[heroes.talents]]
+name = "Hunka' Burning Olaf"
+desc = "Olaf deals 34 (+4% per level) damage every second to nearby enemies."
+level = 7
+[[heroes.talents]]
+name = "Nordic Attack Squad"
+desc = "The Lost Vikings gain 5% Attack Speed for each Viking alive."
+level = 7
+
+[[heroes.talents]]
+name = "Impatience Is a Virtue"
+desc = "Reduces the cooldown of all Viking Abilities by 2 seconds."
+level = 10
+[[heroes.talents]]
+name = "Ragnarok 'n' Roll!"
+desc = "Longboat Raid's Mortar can be reactivated to launch a mortar at a target area within Longboat Raid's range."
+level = 10
+
+[[heroes.talents]]
+name = "Executioner"
+desc = "Basic Attacks deal 40% more damage against slowed, rooted, or stunned targets. Viking Bribery can be used on enemy Heroes."
+level = 13
+[[heroes.talents]]
+name = "Jump!"
+desc = "The Lost Vikings can jump, enabling them to pass over enemies and terrain."
+level = 13
+
+[[heroes.talents]]
+name = "The Sequel!"
+desc = "Reduces the cooldown of Play Again! by 30 seconds and increases the duration of the Stealth by 20 seconds."
+level = 16
+[[heroes.talents]]
+name = "Large and In Charge"
+desc = "Olaf becomes Unstoppable and Stuns enemies he charges through for 1 second."
+level = 16
+[[heroes.talents]]
+name = "64 KB Marathon"
+desc = "Increases the Movement Speed bonus of Go Go Go! to 40%."
+level = 16
+
+[[heroes.talents]]
+name = "Fury of the Storm"
+desc = "Every 5 seconds, the next Basic Attack will deal an additional 34 (+4% per level) damage to the target and 67 (+4% per level) damage to all nearby Minions and Mercenaries."
+level = 20
+[[heroes.talents]]
+name = "The Long Goodbye"
+desc = "The Longboat can attack two targets at once. Its attack speed is increased by 100%."
+level = 20
+[[heroes.talents]]
+name = "Checkpoint Reached"
+desc = "Play Again!'s cooldown is reduced by 30 seconds, it can be used at death locations, and grants all Vikings 60% increased Movement Speed that decays over 3 seconds."
+level = 20
+
+# --------------------
+
+[[heroes]]
+name = "ABATHUR"
+desc = "Abathur, the Evolution Master of Kerrigan's Swarm, works ceaselessly to improve the zerg from the genetic level up. His vast intellect and boundless spirit are utterly devoted to science."
+icon = "https://static.heroesofthestorm.com/images/hero-select/card-portraits/abathur-d1205378ac.jpg"
+universe = "StarCraft"
+
+[[heroes.abilities]]
+name = "Symbiote"
+desc = "Spawn and attach a Symbiote to a target ally or structure. While active, Abathur controls the Symbiote, gaining access to new abilities. The Symbiote is able to shield its host."
+[[heroes.abilities]]
+name = "Stab"
+desc = "Shoots a spike towards target area that deals 119 (+4% per level) damage to the first enemy it contacts."
+[[heroes.abilities]]
+name = "Spike Burst"
+desc = "Deals 117 (+4% per level) damage to nearby enemies."
+[[heroes.abilities]]
+name = "Carapace"
+desc = "Shields the assisted ally, absorbing 157 (+4% per level) damage over 3 seconds."
+[[heroes.abilities]]
+name = "Toxic Nest"
+desc = "Spawn a mine that becomes active after a short time. Deals 180 (+4% per level) damage and reveals the enemy for 4 seconds. Lasts 90 seconds. Stores up to 3 charges."
+
+[[heroes.talents]]
+name = "Survival Instincts"
+desc = "Increases the duration of Symbiote's Carapace by 100%."
+level = 1
+[[heroes.talents]]
+name = "Regenerative Microbes"
+desc = "Heal the target of Symbiote for 32 (+4% per level) Health per second over 4 seconds."
+level = 1
+[[heroes.talents]]
+name = "Pressurized Glands"
+desc = "Increases the range of Symbiote's Spike Burst by 25% and decreases the cooldown by 1 second."
+level = 1
+
+[[heroes.talents]]
+name = "Adrenal Overload"
+desc = "Symbiote's Spike Burst heals the host for 31 (+4% per level) Health per enemy hit."
+level = 4
+[[heroes.talents]]
+name = "Networked Carapace"
+desc = "Symbiote's Carapace also grants a Shield to nearby allied Heroes, Minions, and Mercenaries."
+level = 4
+[[heroes.talents]]
+name = "Prolific Dispersal"
+desc = "Increase the duration of Toxic Nest by 45%. While inside a Bush, Toxic Nest's cooldown recharges 75% faster."
+level = 4
+
+[[heroes.talents]]
+name = "Ultimate Evolution"
+desc = "Clone target allied Hero and control it for 20 seconds. Abathur has perfected the clone, granting it 20% Spell Power, 20% bonus Attack Damage, and 10% bonus Movement Speed. Cannot use their Heroic Ability."
+level = 10
+[[heroes.talents]]
+name = "Evolve Monstrosity"
+desc = "Turn an allied Minion or Locust into a Monstrosity. When enemy Minions near the Monstrosity die, it gains 2% Health and 2% Basic Attack damage, stacking up to 40 times. The Monstrosity can be healed by Carapace and has a ranged Splash Attack."
+level = 10
+
+[[heroes.talents]]
+name = "Soma Transference"
+desc = "While inside an allied Hero, Symbiote's Spike Burst heals the host for 29 (+4% per level) Health per enemy hit."
+level = 13
+[[heroes.talents]]
+name = "Bombard Strain"
+desc = "Locust's Basic Attacks become a long-range siege attack and their duration is increased by 50%."
+level = 13
+
+[[heroes.talents]]
+name = "Hive Mind"
+desc = "Symbiote creates an additional Symbiote on a nearby allied Hero."
+level = 16
+[[heroes.talents]]
+name = "Adrenaline Boost"
+desc = "Symbiote's Spike Burst increases the Movement Speed of the target by 40% for 3.5 seconds."
+level = 16
+[[heroes.talents]]
+name = "Envenomed Nest"
+desc = "Toxic Nests Slow enemies by 40% for 2.5 seconds and increase all damage taken by 35% for 3 seconds."
+level = 16
+
+[[heroes.talents]]
+name = "Locust Brood"
+desc = "Activate to spawn 3 Locusts at a nearby location. The Locusts last for 25 seconds, attacking down the nearest lane."
+level = 20
+[[heroes.talents]]
+name = "Evolutionary Link"
+desc = "Using Ultimate Evolution on an ally also applies Symbiote to them."
+level = 20
+[[heroes.talents]]
+name = "Hive Master"
+desc = "Locusts can be spawned directly under an enemy." 
+level = 20
+
+# --------------------
+
+[[heroes]]
+name = "TYCHUS"
+desc = "Tychus Findlay, a notorious outlaw, heavy weapon specialist, and loyal friend, has served with Raynor's Raiders in their struggle against the tyranny of Arcturus Mengsk."
+icon = "https://static.heroesofthestorm.com/images/hero-select/card-portraits/tychus-c21cafbe45.jpg"
+universe = "StarCraft"
+
+[[heroes.abilities]]
+name = "Minigun"
+desc = "Activate to have Basic Attacks against Heroes deal bonus damage equal to 1.5% of their maximum Health. Lasts 3 seconds."
+[[heroes.abilities]]
+name = "Overkill"
+desc = "Deal 118 (+4% per level) damage per second to nearby enemies for 3 seconds. Deals 50% bonus damage to Minions and Mercenaries."
+[[heroes.abilities]]
+name = "Frag Grenade"
+desc = "Lob a grenade that deals 122 (+4% per level) damage, knocking enemies away."
+[[heroes.abilities]]
+name = "Run and Gun"
+desc = "Charge forward and instantly wind up Tychus's minigun."
+[[heroes.abilities]]
+name = "Drakken Laser Drill"
+desc = "Call down a Laser Drill to attack nearby enemies, dealing 144 (+4% per level) damage every second. Reactivate to assign a new target. Lasts 22 seconds."
+
+[[heroes.talents]]
+name = "Armor Piercing Rounds"
+desc = "Minigun deals bonus damage to enemy Heroes equal to 1.5% of their maximum Health."
+level = 1
+[[heroes.talents]]
+name = "Press the Advantage"
+desc = "Run and Gun increases Tychus's Basic Attack range by 1.5 for 3 seconds."
+level = 1
+[[heroes.talents]]
+name = "Dash"
+desc = "Run and Gun gains a 2nd charge with a 4-second cooldown between uses."
+level = 1
+
+[[heroes.talents]]
+name = "Melting Point"
+desc = "Increases Overkill's range by 25%. Each time Overkill hits an enemy, its range is increased by 25% for 3 seconds, up to 100%."
+level = 4
+[[heroes.talents]]
+name = "The Bigger They Are..."
+desc = "Increase the damage of Minigun against enemy Heroes by an additional 1% of their maximum Health."
+level = 4
+[[heroes.talents]]
+name = "Master Assassin"
+desc = "Quest: Hero Takedowns increase Tychus's Attack Speed by 0.5%, up to 15%. Reward: After getting 15 Takedowns, increase Tychus's Basic Attack range by 1.1."
+level = 4
+
+[[heroes.talents]]
+name = "Odin's Fury"
+desc = "Increases the range of the Drakken Laser Drill by 50%. If a target is hit for more than 2 seconds, deal 15% increased damage for the duration."
+level = 7
+[[heroes.talents]]
+name = "That's the Stuff!"
+desc = "Increases the healing from Minigun by an additional 100% when it's fully charged."
+level = 7
+[[heroes.talents]]
+name = "Relentless Soldier"
+desc = "Reduce the duration of silences, stuns, slows, and roots against Tychus by 50%."
+level = 7
+
+[[heroes.talents]]
+name = "Commandeer Odin"
+desc = "Call down an Odin to pilot. The Odin deals increased damage, has 100% increased Basic Attack range, and uses different Abilities. Lasts 23 seconds."
+level = 10
+[[heroes.talents]]
+name = "Drakken Laser Burn"
+desc = "Enemies hit by the Laser Drill are slowed by 20% for 2 seconds. This effect can stack up to 3 times."
+level = 10
+
+[[heroes.talents]]
+name = "Titan Grenade"
+desc = "Increases Frag Grenade's range by 50% and refunds 50 Mana per enemy Hero hit."
+level = 13
+[[heroes.talents]]
+name = "Sizzlin' Attacks"
+desc = "While Minigun is fully wound up, Tychus's Basic Attacks deal an additional 2% of the target's maximum Health as damage."
+level = 13
+
+[[heroes.talents]]
+name = "Big Red Button"
+desc = "Increases the range of the Odin's basic attack by 100%. Additionally, the Odin's basic attacks have no cooldown."
+level = 20
+[[heroes.talents]]
+name = "Focusing Diodes"
+desc = "The Odin's Ragnarok Missiles deal 30% more damage, and its duration is increased by 50%."
+level = 20
+[[heroes.talents]]
+name = "Bob and Weave"
+desc = "Run and Gun grants 50 Spell Armor for 2 seconds, reducing Ability Damage taken by 50%."
+level = 20

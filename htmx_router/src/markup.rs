@@ -28,9 +28,9 @@ pub(crate) fn base(content: Markup) -> Markup {
 }
 
 /// A fragment that draws a bootstrap icon with some text.
-pub(crate) fn icon_text<T: AsRef<str>>(icon: T, text: T) -> Markup {
+pub(crate) fn icon_text<T: AsRef<str>>(icon: T, text: T, tinify: bool) -> Markup {
     let text = text.as_ref();
-    html! { (self::icon(icon)) " " (text) }
+    html! { (self::icon(icon)) " " span .d-none[tinify] .d-sm-inline[tinify] { (text) } }
 }
 
 /// A fragment that draws a bootstrap icon.
@@ -90,29 +90,29 @@ pub(crate) fn navbar() -> Markup {
             div."container-fluid" {
 
                 a."navbar-brand" href="/"
-                { (icon_text("transparency", "Routing (htmx)")) }
+                { (icon_text("transparency", "Router", false)) span ."d-none d-md-inline" { " (htmx)" } }
 
                 div .d-flex .justify-content-center .gap-2 {
 
                     button
                     hx-get="/heroes"
                     ."btn btn-outline-primary"
-                    { (icon_text("emoji-smile-fill", "Heroes")) }
+                    { (icon_text("emoji-smile-fill", "Heroes", true)) }
 
                     button
                     ."btn btn-outline-primary"
                     hx-get="/abilities"
-                    { (icon_text("dpad-fill", "Abilities")) }
+                    { (icon_text("dpad-fill", "Abilities", true)) }
 
                     button
                     ."btn btn-outline-primary"
                     hx-get="/talents"
-                    { (icon_text("star-fill", "Talents")) }
+                    { (icon_text("star-fill", "Talents", true)) }
 
                     button
                     ."btn btn-outline-primary"
                     hx-get="/about"
-                    { (icon_text("info-circle", "About")) }
+                    { (icon_text("info-circle", "About", true)) }
                 }
             }
         }
@@ -136,7 +136,7 @@ pub(crate) fn heroes(heroes: &[Hero]) -> Markup {
                             span .text-secondary { " (" small { (hero.id) } ")" }
                         }
                         span {
-                            span ."badge text-bg-danger" {
+                            span ."badge text-bg-danger d-none d-sm-inline" {
                                 small { (hero.universe) }
                             }
                         }
@@ -188,13 +188,13 @@ pub(crate) fn card_tab(tab: HeroCardTab, hero_id: &String) -> Markup {
         div .card-header {
             ul .nav .nav-tabs .card-header-tabs {
                 li .nav-item {
-                    a .nav-link .active[tab == HeroCardTab::Description] href={"/"(hero_id)"/description"} { (icon_text("file-earmark-text-fill", "Description")) }
+                    a .nav-link .active[tab == HeroCardTab::Description] href={"/"(hero_id)"/description"} { (icon_text("file-earmark-text-fill", "Description", true)) }
                 }
                 li .nav-item {
-                    a .nav-link .active[tab == HeroCardTab::Abilities] href={"/"(hero_id)"/abilities"} { (icon_text("dpad-fill", "Abilities")) }
+                    a .nav-link .active[tab == HeroCardTab::Abilities] href={"/"(hero_id)"/abilities"} { (icon_text("dpad-fill", "Abilities", true)) }
                 }
                 li .nav-item {
-                    a .nav-link .active[tab == HeroCardTab::Talents] href={"/"(hero_id)"/talents"} { (icon_text("star-fill", "Talents")) }
+                    a .nav-link .active[tab == HeroCardTab::Talents] href={"/"(hero_id)"/talents"} { (icon_text("star-fill", "Talents", true)) }
                 }
             }
         }
@@ -268,10 +268,10 @@ pub(crate) fn list_abilities(abilities: Vec<&Ability>) -> Markup {
                 {
                     div ."d-flex justify-content-between" {
                         span {
-                            (icon_text("dpad", &ability.name))
+                            (icon_text("dpad", &ability.name, false))
                         }
-                        span ."badge text-bg-primary" {
-                            small { (ability.id) }
+                        span ."badge text-bg-primary d-none d-sm-inline" {
+                            small { (ability.hero_id) }
                         }
                     }
                 }
@@ -291,13 +291,13 @@ pub(crate) fn list_talents(talents: Vec<&Talent>) -> Markup {
                 {
                     div ."d-flex justify-content-between" {
                         span {
-                            (icon_text("stars", &talent.name))
+                            (icon_text("stars", &talent.name, false))
                             span .text-secondary { " [" }
                             (talent_color(talent.level))
                             span .text-secondary { "]" }
                         }
-                        span ."badge text-bg-warning" {
-                            small { (talent.id) }
+                        span ."badge text-bg-warning d-none d-sm-inline" {
+                            small { (talent.hero_id) }
                         }
                     }
                 }
