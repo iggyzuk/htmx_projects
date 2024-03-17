@@ -41,9 +41,9 @@ async fn main() {
         .route("/articles/:page", get(articles))
         .with_state(AppState::new());
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:5443").await.unwrap();
-
-    println!("🚀 Server Started: 0.0.0.0:5443 🚀");
+        let address = "0.0.0.0:4201";
+        let listener = tokio::net::TcpListener::bind(address).await.unwrap();
+        println!("🚀 Server Started: {address} 🚀");
 
     axum::serve(listener, app.into_make_service())
         .await

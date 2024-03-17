@@ -7,7 +7,7 @@ app = 'htmx-projects'
 primary_region = 'waw'
 
 [http_service]
-  internal_port = 3242
+  internal_port = 4202
   force_https = true
   auto_stop_machines = true
   auto_start_machines = true

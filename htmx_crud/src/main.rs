@@ -89,11 +89,9 @@ async fn main() {
         .layer(cors)
         .with_state(AppState::new());
 
-    let address = "0.0.0.0:4242";
-
-    let listener = tokio::net::TcpListener::bind(address).await.unwrap();
-
-    println!("🚀 Server Started: {address} 🚀");
+        let address = "0.0.0.0:4203";
+        let listener = tokio::net::TcpListener::bind(address).await.unwrap();
+        println!("🚀 Server Started: {address} 🚀");
 
     axum::serve(listener, app.into_make_service())
         .await

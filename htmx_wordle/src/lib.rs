@@ -70,11 +70,9 @@ pub async fn run() {
         .route("/games", get(games))
         .with_state(state);
 
-    let address = "0.0.0.0:3242";
-
-    let listener = tokio::net::TcpListener::bind(address).await.unwrap();
-
-    println!("🚀 Server Started: {address} 🚀");
+        let address = "0.0.0.0:4202";
+        let listener = tokio::net::TcpListener::bind(address).await.unwrap();
+        println!("🚀 Server Started: {address} 🚀");
 
     axum::serve(listener, app.into_make_service())
         .await
