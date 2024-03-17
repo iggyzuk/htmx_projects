@@ -132,51 +132,53 @@ impl Talent {
 }
 
 mod deserialize {
-    use serde::Deserialize;
+    use serde::{Deserialize, Serialize};
 
-    use super::{Abilities, Ability, Hero, Heroes, Talent, Talents};
-
-    #[derive(Deserialize)]
-    struct DeData {
-        heroes: Vec<DeHero>,
+    #[derive(Deserialize, Serialize)]
+    struct Data {
+        heroes: Vec<Hero>,
     }
 
-    #[derive(Deserialize)]
-    struct DeHero {
+    #[derive(Deserialize, Serialize)]
+    struct Hero {
         name: String,
         desc: String,
         icon: String,
         universe: String,
-        abilities: Vec<DeAbility>,
-        talents: Vec<DeTalent>,
+        abilities: Vec<Ability>,
+        talents: Vec<Talent>,
     }
 
-    #[derive(Deserialize)]
-    struct DeAbility {
+    #[derive(Deserialize, Serialize)]
+    struct Ability {
         name: String,
         desc: String,
     }
 
-    #[derive(Deserialize)]
-    struct DeTalent {
+    #[derive(Deserialize, Serialize)]
+    struct Talent {
         name: String,
         desc: String,
         level: u8,
     }
 
-    pub(super) fn parse() -> (Heroes, Abilities, Talents) {
-        let data: DeData = match toml::from_str(include_str!("../content.toml")) {
+    pub(super) fn parse() -> (super::Heroes, super::Abilities, super::Talents) {
+        let data: Data = match ron::from_str(include_str!("../content.ron")) {
             Ok(data) => data,
             Err(e) => {
-                panic!("error deserializing TOML: {}", e);
+                panic!("error deserializing RON: {}", e);
             }
         };
+
+        // let x = ron::to_string(&data).unwrap();
+        // println!("{x}");
+
         (
-            Heroes(
+            super::Heroes(
                 data.heroes
                     .iter()
                     .map(|x| {
-                        Hero::new(
+                        super::Hero::new(
                             x.name.clone(),
                             x.desc.clone(),
                             x.icon.clone(),
@@ -185,19 +187,21 @@ mod deserialize {
                     })
                     .collect(),
             ),
-            Abilities(
+            super::Abilities(
                 data.heroes
                     .iter()
                     .flat_map(|h| h.abilities.iter().map(move |a| (h, a)))
-                    .map(|(h, a)| Ability::new(h.name.clone(), a.name.clone(), a.desc.clone()))
+                    .map(|(h, a)| {
+                        super::Ability::new(h.name.clone(), a.name.clone(), a.desc.clone())
+                    })
                     .collect(),
             ),
-            Talents(
+            super::Talents(
                 data.heroes
                     .iter()
                     .flat_map(|h| h.talents.iter().map(move |t| (h, t)))
                     .map(|(h, t)| {
-                        Talent::new(h.name.clone(), t.name.clone(), t.desc.clone(), t.level)
+                        super::Talent::new(h.name.clone(), t.name.clone(), t.desc.clone(), t.level)
                     })
                     .collect(),
             ),

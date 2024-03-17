@@ -13,4 +13,4 @@ tower-http = { workspace = true }
 uuid = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-toml = { workspace = true }
+ron = { workspace = true }
