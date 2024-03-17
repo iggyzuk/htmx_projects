@@ -1,5 +1,11 @@
 [workspace]
-members = ["htmx_crud", "htmx_infinite_scroll", "htmx_router", "htmx_wordle"]
+members = [
+    "htmx_crud",
+    "htmx_infinite_scroll",
+    "htmx_router",
+    "htmx_wordle",
+    "htmx_images",
+]
 resolver = "2"
 
 [workspace.dependencies]
@@ -19,3 +25,4 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 base64 = "0.22.0"
 ron = "0.8.1"
+dotenvy = "0.15.7"

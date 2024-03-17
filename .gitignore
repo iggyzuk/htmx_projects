@@ -2,3 +2,4 @@
 .DS_Store
 save_data.json
 /data
+.env
