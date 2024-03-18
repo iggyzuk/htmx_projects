@@ -5,7 +5,7 @@ use crate::state::Image;
 pub(crate) fn base(content: Markup) -> Markup {
     html! {
         (DOCTYPE)
-        html data-theme="dark" {
+        html data-bs-theme="dark" {
             head {
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
@@ -73,9 +73,11 @@ pub(crate) fn form() -> Markup {
                 hx-target="#all-images"
                 hx-swap="afterbegin"
                 hx-disabled-elt="#sub-btn"
+                // You can do the progress bar animation with hyperscript too, but how about the rest?
+                // _="on htmx:xhr:progress(loaded, total) set *width of #progress to (((loaded/total)*100) + '%')"
                 {
                     div ."col-sm-8 mb-2 mb-sm-0" {
-                        input id="form-file" ."form-control form-control-lg" type="file" name="file" accept="image/jpeg, image/png";
+                        input id="form-file" ."form-control form-control-lg" type="file" name="file" accept="image/jpeg, image/png, image/webp";
                     }
                     div .col-sm-4 {
                         button #sub-btn ."btn btn-primary btn-lg w-100" { i ."bi bi-file-earmark-arrow-up-fill" {} " Upload" }

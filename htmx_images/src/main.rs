@@ -26,10 +26,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .with_max_level(tracing::Level::INFO)
         .init();
 
-    match dotenvy::from_filename("htmx_images/.env") {
-        Ok(_) => tracing::info!("found local .env"),
-        Err(_) => tracing::info!("no local .env"),
-    }
+    let env_status = match dotenvy::from_filename("htmx_images/.env") {
+        Ok(_) => "found local .env",
+        Err(_) => "no local .env",
+    };
+    tracing::info!(env_status);
 
     let cors = CorsLayer::new()
         // allow `GET` and `POST` when accessing the resource

@@ -25,4 +25,5 @@ sqlx = { version = "0.7.4", features = [
     "tls-rustls",
 ] }
 image = "0.24.7"
+webp = "0.2.6"
 mime = "0.3.17"

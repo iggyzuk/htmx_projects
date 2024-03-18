@@ -33,7 +33,7 @@ impl Image {
     }
 
     pub(crate) fn src(&self) -> String {
-        format!("data:image/jpeg;base64,{}", self.as_base64())
+        format!("data:{};base64,{}", self.mime_type, self.as_base64())
     }
 
     pub(crate) fn short_date(&self) -> String {

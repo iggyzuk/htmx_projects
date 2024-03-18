@@ -57,14 +57,14 @@ pub(crate) async fn upload_image(
             return (StatusCode::BAD_REQUEST, "only images can be uploaded").into_response();
         }
 
-        let bytes = match img::make_jpeg_thumbnail(&data) {
+        let (bytes, mime_type) = match img::make_thumbnail(&data) {
             Ok(bytes) => bytes,
             Err(err) => {
                 return (StatusCode::INTERNAL_SERVER_ERROR, err.to_string()).into_response();
             }
         };
 
-        let res = db::insert_image(&state, file_name.clone(), mime::IMAGE_JPEG, &bytes).await;
+        let res = db::insert_image(&state, file_name.clone(), mime_type.to_string(), &bytes).await;
 
         let image = match res {
             Ok(image) => {

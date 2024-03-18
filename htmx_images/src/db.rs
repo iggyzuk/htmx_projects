@@ -22,7 +22,7 @@ ORDER BY created_at DESC;
 pub(crate) async fn insert_image(
     state: &AppState,
     file_name: String,
-    mime_type: Mime,
+    mime_type: String,
     image_data: &Vec<u8>,
 ) -> Result<Image, Box<dyn Error>> {
     const QUERY: &'static str = r#"
@@ -35,7 +35,7 @@ RETURNING id, file_name, mime_type, image_data, created_at;
 
     let img = sqlx::query_as(QUERY)
         .bind(&file_name)
-        .bind(&mime_type.to_string())
+        .bind(&mime_type)
         .bind(image_data)
         .fetch_one(database)
         .await?;
