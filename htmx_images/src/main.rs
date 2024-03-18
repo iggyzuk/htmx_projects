@@ -21,12 +21,15 @@ mod state;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    dotenvy::from_filename("htmx_images/.env")?;
-
     // initialize tracing
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
         .init();
+
+    match dotenvy::from_filename("htmx_images/.env") {
+        Ok(_) => tracing::info!("found local .env"),
+        Err(_) => tracing::info!("no local .env"),
+    }
 
     let cors = CorsLayer::new()
         // allow `GET` and `POST` when accessing the resource
