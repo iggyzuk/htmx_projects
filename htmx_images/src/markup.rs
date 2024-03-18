@@ -71,7 +71,7 @@ pub(crate) fn form() -> Markup {
                 hx-encoding="multipart/form-data"
                 hx-post="/images"
                 hx-target="#all-images"
-                hx-swap="beforeend"
+                hx-swap="afterbegin"
                 hx-disabled-elt="#sub-btn"
                 {
                     div ."col-sm-8 mb-2 mb-sm-0" {
