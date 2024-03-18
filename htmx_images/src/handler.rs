@@ -53,7 +53,7 @@ pub(crate) async fn upload_image(
 
         tracing::info!("{}", &x);
 
-        if !content_type.contains(mime::IMAGE.as_str()) {
+        if !content_type.contains(mediatype::names::IMAGE.as_str()) {
             return (StatusCode::BAD_REQUEST, "only images can be uploaded").into_response();
         }
 
@@ -64,7 +64,7 @@ pub(crate) async fn upload_image(
             }
         };
 
-        let res = db::insert_image(&state, file_name.clone(), mime_type.to_string(), &bytes).await;
+        let res = db::insert_image(&state, file_name.clone(), mime_type, &bytes).await;
 
         let image = match res {
             Ok(image) => {

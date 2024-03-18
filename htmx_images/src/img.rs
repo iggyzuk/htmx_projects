@@ -6,11 +6,15 @@ use std::io::Write;
 use image::imageops::FilterType;
 use image::DynamicImage;
 use image::GenericImageView;
+use mediatype::names::IMAGE;
+use mediatype::names::WEBP;
+use mediatype::MediaType;
 
 const TARGET: u32 = 150;
-const MIME_IMAGE_WEBP: &'static str = "image/webp";
 
-pub(crate) fn make_thumbnail(bytes: &[u8]) -> Result<(Vec<u8>, &str), Box<dyn Error>> {
+const IMAGE_WEBP: MediaType = MediaType::new(IMAGE, WEBP);
+
+pub(crate) fn make_thumbnail(bytes: &[u8]) -> Result<(Vec<u8>, String), Box<dyn Error>> {
     let img = image::load_from_memory(bytes)?;
 
     // Calculate the new dimensions while maintaining the aspect ratio
@@ -49,5 +53,5 @@ pub(crate) fn make_thumbnail(bytes: &[u8]) -> Result<(Vec<u8>, &str), Box<dyn Er
         buf_writer.write(webp.as_ref())?;
     }
 
-    Ok((resized_image_bytes, MIME_IMAGE_WEBP))
+    Ok((resized_image_bytes, IMAGE_WEBP.to_string()))
 }

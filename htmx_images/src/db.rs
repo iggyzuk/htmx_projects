@@ -1,5 +1,4 @@
 use crate::state::{AppState, Image};
-use mime::Mime;
 use std::error::Error;
 
 pub(crate) async fn get_image(state: &AppState, id: i64) -> Result<Image, Box<dyn Error>> {

@@ -747,7 +747,7 @@ dependencies = [
  "dotenvy",
  "image",
  "maud",
- "mime",
+ "mediatype",
  "serde",
  "serde_json",
  "sqlx",
@@ -1099,6 +1099,12 @@ dependencies = [
  "cfg-if",
  "digest",
 ]
+
+[[package]]
+name = "mediatype"
+version = "0.19.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8878cd8d1b3c8c8ae4b2ba0a36652b7cf192f618a599a7fbdfa25cffd4ea72dd"
 
 [[package]]
 name = "memchr"
