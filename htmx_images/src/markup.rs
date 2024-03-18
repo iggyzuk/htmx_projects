@@ -16,7 +16,7 @@ pub(crate) fn base(content: Markup) -> Markup {
                 script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous" {}
 
                 script src="https://unpkg.com/htmx.org@1.9.10" {}
-                script src="https://unpkg.com/hyperscript.org@0.9.12" {}
+                // script src="https://unpkg.com/hyperscript.org@0.9.12" {}
             }
             body {
                 (content)
@@ -29,62 +29,75 @@ pub(crate) fn home() -> Markup {
     let content = html! {
         div ."container-flex m-3" {
             (form())
-            div #all-images ."d-flex justify-content-center flex-wrap"
-            hx-trigger="load" hx-get="/images" { "🔥" }
+
+            // images appear here
+            div
+            #all-images
+            ."d-flex justify-content-center flex-wrap gap-1"
+            hx-trigger="load" hx-get="/images"
+            { h1 { "💿" } }
         }
-        // (grid())
     };
     base(content)
 }
 
-// todo: how do you catch events and reset the progress bar when the request responds?
 pub(crate) fn form() -> Markup {
-    let script = PreEscaped(
-        r##"
-htmx.on('#img-upload-form', 'htmx:xhr:progress', function(evt) {
-    var loaded = event.detail.loaded;
-        var total = event.detail.total;
-        var progress = (loaded / total) * 100;
+    let script = r##"
+        htmx.on('#img-upload-form', 'htmx:xhr:progress', function(evt) {
+            var loaded = evt.detail.loaded;
+            var total = evt.detail.total;
+            var progress = (loaded / total) * 100;
 
-        document.getElementById('progress').style.width = progress + '%';
-});
-    "##,
-    );
+            document.getElementById('progress').style.width = progress + '%';
+        });
+
+        htmx.on('htmx:afterRequest', function(evt) {
+            if (evt.detail.elt && evt.detail.elt.id === 'img-upload-form') {
+                document.getElementById('progress').style.width = '0%'; // Reset progress bar
+                document.getElementById('form-file').value = ''; // Clear file input field
+            }
+        });
+    "##;
 
     html! {
-
         div {
-
-            h1 { "Images" }
-
+            h1 { i ."bi bi-file-image" {} " Images" }
             hr;
+            div .m-2 {
 
-            form
-            #img-upload-form
-            hx-encoding="multipart/form-data" hx-post="/images" hx-target="#all-images" hx-swap="beforeend"
-
-            // question: is this possible with hyperscript?
-            // _="on htmx:xhr:progress(loaded, total) set #progress.value to (loaded/total)*100"
-            {
-                input type="file" name="file" accept="image/jpeg, image/png";
-                button .btn .btn-warning { "Upload" }
-
-                div class="progress m-3" role="progressbar"{
+                form
+                #img-upload-form
+                .row
+                hx-encoding="multipart/form-data"
+                hx-post="/images"
+                hx-target="#all-images"
+                hx-swap="beforeend"
+                hx-disabled-elt="#sub-btn"
+                {
+                    div ."col-sm-8 mb-2 mb-sm-0" {
+                        input id="form-file" ."form-control form-control-lg" type="file" name="file" accept="image/jpeg, image/png";
+                    }
+                    div .col-sm-4 {
+                        button #sub-btn ."btn btn-primary btn-lg w-100" { i ."bi bi-file-earmark-arrow-up-fill" {} " Upload" }
+                    }
+                }
+                div ."progress mt-3" role="progressbar" {
                     div id="progress" class="progress-bar progress-bar-striped progress-bar-animated" style="width:0%;" {}
                 }
             }
-
             hr;
         }
-
-        script { (script) }
+        script { (PreEscaped(script)) }
     }
 }
 
 pub(crate) fn image(img: &Image) -> Markup {
     html! {
-        img src=(img.src());
-        // span { (img.id) ", " (img.file_name) ", " (img.mime_type) ", " (img.created_at) }
+        div style="max-width:150px;" {
+            a href={"/images/"(img.id)} { img .rounded src=(img.src()); }
+            div .text-truncate .fw-bold { (img.file_name) }
+            small .text-wrap { (img.id) ": " (img.short_date()) }
+        }
     }
 }
 
