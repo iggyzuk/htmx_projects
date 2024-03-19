@@ -17,6 +17,7 @@ mod db;
 mod handler;
 mod img;
 mod markup;
+mod mime;
 mod state;
 
 #[tokio::main]

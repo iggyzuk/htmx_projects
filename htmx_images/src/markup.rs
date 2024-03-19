@@ -77,7 +77,7 @@ pub(crate) fn form() -> Markup {
                 // _="on htmx:xhr:progress(loaded, total) set *width of #progress to (((loaded/total)*100) + '%')"
                 {
                     div ."col-sm-8 mb-2 mb-sm-0" {
-                        input id="form-file" ."form-control form-control-lg" type="file" name="file" accept="image/jpeg, image/png, image/webp";
+                        input id="form-file" ."form-control form-control-lg" type="file" name="file" accept="image/jpeg, image/png, image/webp, image/gif";
                     }
                     div .col-sm-4 {
                         button #sub-btn ."btn btn-primary btn-lg w-100" { i ."bi bi-file-earmark-arrow-up-fill" {} " Upload" }
