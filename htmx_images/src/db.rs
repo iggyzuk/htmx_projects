@@ -11,7 +11,8 @@ pub(crate) async fn get_image(state: &AppState, id: i64) -> Result<Image, Box<dy
 pub(crate) async fn get_all_images(state: &AppState) -> Result<Vec<Image>, Box<dyn Error>> {
     const QUERY: &'static str = r#"
 SELECT * FROM image
-ORDER BY created_at DESC;
+ORDER BY created_at DESC
+LIMIT 100;
 "#;
     let database = &state.database;
     let img = sqlx::query_as(QUERY).fetch_all(database).await?;
