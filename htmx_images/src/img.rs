@@ -1,7 +1,4 @@
 use std::error::Error;
-use std::io::BufWriter;
-use std::io::Cursor;
-use std::io::Write;
 
 use image::codecs::gif::GifDecoder;
 use image::imageops::FilterType;
@@ -11,136 +8,152 @@ use image::Frame;
 use image::GenericImageView;
 
 use image::ImageDecoder;
+
 use image::RgbaImage;
 
+use webp::AnimDecoder;
 use webp::AnimEncoder;
 use webp::AnimFrame;
+use webp::Encoder;
 use webp::WebPConfig;
 
 use crate::mime;
 
 const TARGET_PX: u32 = 150;
+const QUALITY: f32 = 70.0;
+const MAX_FRAMES: usize = 24;
+const FRAME_RATE: i32 = 100;
 
 pub(crate) fn thumbnail_for_mime(
     data: &[u8],
     mime_type: &String,
 ) -> Result<(Vec<u8>, String), Box<dyn Error>> {
-    if mime_type == &mime::IMAGE_GIF.to_string() {
-        animated_webp_thumbnail_from_gif(&data)
-    } else {
-        webp_thumbnail(&data)
+    match mime_type.as_str() {
+        "image/webp" => webp_to_webp(&data),
+        "image/gif" => gif_to_webp(&data),
+        _ => any_to_webp(&data),
     }
 }
 
-pub(crate) fn webp_thumbnail(bytes: &[u8]) -> Result<(Vec<u8>, String), Box<dyn Error>> {
+pub(crate) fn any_to_webp(bytes: &[u8]) -> Result<(Vec<u8>, String), Box<dyn Error>> {
     let img = image::load_from_memory(bytes)?;
-
-    let (original_width, original_height) = img.dimensions();
-    let (width, height) = window(original_width, original_height);
-
-    let resized_img = image::imageops::resize(&img, width, height, FilterType::Lanczos3);
-
-    tracing::info!("resized dimensions: {:?}", resized_img.dimensions());
-
-    // get the half offset by doing: 190 - 150 = 40 -> 40 / 2 = 20
-    let center_x = (width - TARGET_PX) / 2;
-    let center_y = (height - TARGET_PX) / 2;
-
-    // Crop image at the center
-    let crop_img = resized_img
-        .view(center_x, center_y, TARGET_PX, TARGET_PX)
-        .to_image();
-
-    // Create the WebP encoder
-    let dynamic_img = DynamicImage::from(crop_img);
-    let encoder = webp::Encoder::from_image(&dynamic_img)?;
-    let webp = encoder.encode(80.0);
-
-    // Save resized image to a Vec<u8>
-    let mut final_bytes = Vec::new();
-    {
-        let mut buf_writer = BufWriter::new(Cursor::new(&mut final_bytes));
-        buf_writer.write(webp.as_ref())?;
-    } // buf_writer is dropped
-
-    Ok((final_bytes, mime::IMAGE_WEBP.to_string()))
+    let small_img = resize_and_crop(img);
+    let encoder = Encoder::from_image(&small_img)?;
+    let webp_memory = encoder.encode(QUALITY);
+    Ok((webp_memory.to_vec(), mime::IMAGE_WEBP.to_string()))
 }
 
-pub(crate) fn animated_webp_thumbnail_from_gif(
-    gif_bytes: &[u8],
-) -> Result<(Vec<u8>, String), Box<dyn Error>> {
+pub(crate) fn gif_to_webp(gif_bytes: &[u8]) -> Result<(Vec<u8>, String), Box<dyn Error>> {
     let gif_decoder = GifDecoder::new(gif_bytes)?;
 
     let (original_width, original_height) = gif_decoder.dimensions();
-    let (width, height) = window(original_width, original_height);
 
     let gif_frames: Vec<Frame> = gif_decoder.into_frames().collect::<Result<_, _>>()?;
 
     // Keep only 24 evenly distributed frames.
     let frames_count = gif_frames.len();
-    let frame_step = frames_count / std::cmp::min(24, frames_count);
-    let gif_frames = gif_frames.into_iter().step_by(frame_step);
+    let frame_step = frames_count / std::cmp::min(MAX_FRAMES, frames_count);
 
     // Temporary store all scaled and resized frames here,
     // so that in the next step we can construct a webp.
-    let mut frame_data = vec![];
+    let mut processed_frames = vec![];
 
     // Scale and resize all gif frames.
-    for gif_frame in gif_frames {
+    for gif_frame in gif_frames.into_iter().step_by(frame_step) {
         let gif_frame_bytes = gif_frame.buffer().to_vec();
-        let rgba_img = RgbaImage::from_raw(original_width, original_height, gif_frame_bytes)
-            .ok_or("could not create rgba image from raw bytes")?;
-        let dyn_img_frame = DynamicImage::from(rgba_img);
-        let resized_dyn_img_frame = dyn_img_frame.resize(width, height, FilterType::Lanczos3);
-
-        // get the half offset by doing: 190 - 150 = 40 -> 40 / 2 = 20
-        let center_x = (width - TARGET_PX) / 2;
-        let center_y = (height - TARGET_PX) / 2;
-
-        // Crop image at the center
-        let crop_img = DynamicImage::from(
-            resized_dyn_img_frame
-                .view(center_x, center_y, TARGET_PX, TARGET_PX)
-                .to_image(),
-        );
-        frame_data.push(crop_img);
+        let img = RgbaImage::from_vec(original_width, original_height, gif_frame_bytes).unwrap();
+        processed_frames.push(resize_and_crop(img.into()));
     }
 
     // Construct WebP animation encoder with lossy config.
     let mut config = WebPConfig::new().map_err(|_| "could not create webp config")?;
     config.lossless = 0;
     config.alpha_compression = 0;
-    config.quality = 70.0;
+    config.quality = QUALITY;
 
     let mut anim_encoder = AnimEncoder::new(TARGET_PX, TARGET_PX, &config);
     anim_encoder.set_loop_count(0); // Set loop count to 0 for infinite loop, change if needed
 
     // Copy all frames into WebP.
     let mut timestamp = 0;
-    for frame in &frame_data {
+    for frame in &processed_frames {
         let anim = AnimFrame::from_image(frame, timestamp)?;
         anim_encoder.add_frame(anim);
-        timestamp += 100;
+        timestamp += FRAME_RATE;
     }
 
     // Write bytes from encoder.
     let webp_encoder = anim_encoder.encode();
-    let mut final_bytes = Vec::new();
-    {
-        let mut buf_writer = BufWriter::new(&mut final_bytes);
-        buf_writer.write(&webp_encoder)?;
-    } // buf_writer is dropped
+    Ok((webp_encoder.to_vec(), mime::IMAGE_WEBP.to_string()))
+}
 
-    Ok((final_bytes, mime::IMAGE_WEBP.to_string()))
+pub(crate) fn webp_to_webp(bytes: &[u8]) -> Result<(Vec<u8>, String), Box<dyn Error>> {
+    let anim_image = AnimDecoder::new(&bytes).decode()?;
+
+    if anim_image.has_animation() {
+        let mut processed_frames = vec![];
+
+        let frames: Vec<AnimFrame> = anim_image.into_iter().collect();
+
+        let frames_count = frames.len();
+        let frame_step = frames_count / std::cmp::min(MAX_FRAMES, frames_count);
+
+        for frame in frames.into_iter().step_by(frame_step) {
+            let img =
+                RgbaImage::from_vec(frame.width(), frame.height(), frame.get_image().to_vec())
+                    .unwrap();
+            processed_frames.push(resize_and_crop(img.into()))
+        }
+
+        // Construct WebP animation encoder with lossy config.
+        let mut config = WebPConfig::new().map_err(|_| "could not create webp config")?;
+        config.lossless = 0;
+        config.alpha_compression = 0;
+        config.quality = QUALITY;
+
+        let mut anim_encoder = AnimEncoder::new(TARGET_PX, TARGET_PX, &config);
+        anim_encoder.set_loop_count(0); // Set loop count to 0 for infinite loop, change if needed
+
+        // Copy all frames into WebP.
+        let mut timestamp = 0;
+        for frame in &processed_frames {
+            let anim = AnimFrame::from_image(frame, timestamp)?;
+            anim_encoder.add_frame(anim);
+            timestamp += FRAME_RATE;
+        }
+
+        // Write bytes from encoder.
+        let webp_encoder = anim_encoder.encode();
+        return Ok((webp_encoder.to_vec(), mime::IMAGE_WEBP.to_string()));
+    }
+
+    any_to_webp(bytes)
+}
+
+fn resize_and_crop(img: DynamicImage) -> DynamicImage {
+    let (window_width, window_height) = window(img.width(), img.height());
+
+    let dyn_img: DynamicImage = img.to_rgb8().into();
+    let resized_dyn_img = dyn_img.resize(window_width, window_height, FilterType::Lanczos3);
+
+    // get the half offset by doing: 190 - 150 = 40 -> 40 / 2 = 20
+    let center_x = (window_width - TARGET_PX) / 2;
+    let center_y = (window_height - TARGET_PX) / 2;
+
+    // Crop image at the center
+    resized_dyn_img
+        .view(center_x, center_y, TARGET_PX, TARGET_PX)
+        .to_image()
+        .into()
 }
 
 // Calculate the new dimensions while maintaining the aspect ratio
 fn window(width: u32, height: u32) -> (u32, u32) {
     if width > height {
         let aspect = width as f32 / height as f32;
-        ((TARGET_PX as f32 * aspect) as u32, TARGET_PX)
+        ((TARGET_PX as f32 * aspect).round() as u32, TARGET_PX)
     } else {
         let aspect = height as f32 / width as f32;
-        (TARGET_PX, (TARGET_PX as f32 * aspect) as u32)
+        (TARGET_PX, (TARGET_PX as f32 * aspect).round() as u32)
     }
 }

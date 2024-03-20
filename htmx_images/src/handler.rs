@@ -1,12 +1,10 @@
-use std::error::Error;
-
 use axum::{
     extract::{Multipart, Path, State},
     http::StatusCode,
     response::{IntoResponse, Response},
 };
 
-use crate::{db, img, markup, mime, state::AppState};
+use crate::{db, img, markup, state::AppState};
 
 pub(crate) async fn index() -> maud::Markup {
     crate::markup::home()
