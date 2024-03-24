@@ -60,7 +60,7 @@ pub(crate) fn gif_to_webp(gif_bytes: &[u8]) -> Result<(Vec<u8>, String), Box<dyn
 
     // Scale and resize all gif frames.
     for gif_frame in gif_frames.into_iter().step_by(frame_step) {
-        let gif_frame_bytes = gif_frame.buffer().to_vec();
+        let gif_frame_bytes: Vec<u8> = gif_frame.into_buffer().into_vec();
         let img = RgbaImage::from_vec(original_width, original_height, gif_frame_bytes).unwrap();
         processed_frames.push(resize_and_crop(img.into()));
     }
@@ -72,7 +72,7 @@ pub(crate) fn gif_to_webp(gif_bytes: &[u8]) -> Result<(Vec<u8>, String), Box<dyn
     config.quality = QUALITY;
 
     let mut anim_encoder = AnimEncoder::new(TARGET_PX, TARGET_PX, &config);
-    anim_encoder.set_loop_count(0); // Set loop count to 0 for infinite loop, change if needed
+    anim_encoder.set_loop_count(0);
 
     // Copy all frames into WebP.
     let mut timestamp = 0;
@@ -133,7 +133,7 @@ pub(crate) fn webp_to_webp(bytes: &[u8]) -> Result<(Vec<u8>, String), Box<dyn Er
 fn resize_and_crop(img: DynamicImage) -> DynamicImage {
     let (window_width, window_height) = window(img.width(), img.height());
 
-    let dyn_img: DynamicImage = img.to_rgb8().into();
+    let dyn_img: DynamicImage = img.to_rgba8().into();
     let resized_dyn_img = dyn_img.resize(window_width, window_height, FilterType::Lanczos3);
 
     // get the half offset by doing: 190 - 150 = 40 -> 40 / 2 = 20

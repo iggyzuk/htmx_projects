@@ -23,7 +23,7 @@ pub(crate) async fn insert_image(
     state: &AppState,
     file_name: String,
     mime_type: String,
-    image_data: &Vec<u8>,
+    image_data: &[u8],
 ) -> Result<Image, Box<dyn Error>> {
     const QUERY: &'static str = r#"
 INSERT INTO image (file_name, mime_type, image_data)
