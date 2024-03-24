@@ -171,7 +171,7 @@ async fn google_auth(
         .context("unexpected error retrieving CSRF cookie value")?;
 
     // Attach the session cookie to the response header
-    let cookie = format!("{COOKIE_NAME}={cookie}; SameSite=Lax; Path=/");
+    let cookie = format!("{COOKIE_NAME}={cookie}; SameSite=Lax; Secure; HttpOnly; Path=/");
     let mut headers = HeaderMap::new();
     headers.insert(
         SET_COOKIE,
@@ -309,7 +309,7 @@ async fn login_authorized(
         .context("unexpected error retrieving cookie value")?;
 
     // Build the cookie
-    let cookie = format!("{COOKIE_NAME}={cookie}; SameSite=Lax; Path=/");
+    let cookie = format!("{COOKIE_NAME}={cookie}; SameSite=Lax; Secure; HttpOnly; Path=/");
 
     // Set cookie
     let mut headers = HeaderMap::new();
