@@ -39,7 +39,7 @@ pub(crate) fn home(user: &Option<User>) -> Markup {
 
                         p { small .card-text .text-secondary { "Made by " a href="https://iggyzuk.com/" { "Iggy Zuk" } } }
 
-                        div #protected-content hx-get="/protected" hx-trigger="load" { }
+                        div #protected-content hx-get="/protected-fragment" hx-trigger="load" { }
 
                         div ."text-center" {
                             @if user.is_none() {

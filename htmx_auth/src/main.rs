@@ -49,6 +49,7 @@ async fn main() -> Result<()> {
         .route("/auth/google", get(google_auth))
         .route("/auth/authorized", get(login_authorized))
         .route("/protected", get(protected))
+        .route("/protected-fragment", get(protected_fragment))
         .route("/logout", get(logout))
         .with_state(app_state);
 
@@ -181,7 +182,12 @@ async fn google_auth(
 }
 
 // Valid user session required. If there is none, redirect to the auth page
-async fn protected(user: Option<User>) -> impl IntoResponse {
+async fn protected(user: User) -> impl IntoResponse {
+    markup::protected(&user)
+}
+
+// No valid user session is required, will not try to redirect to auth page.
+async fn protected_fragment(user: Option<User>) -> impl IntoResponse {
     if let Some(user) = user {
         return markup::protected(&user).into_response();
     }
@@ -319,7 +325,7 @@ struct AuthRedirect;
 
 impl IntoResponse for AuthRedirect {
     fn into_response(self) -> Response {
-        Redirect::temporary("/auth/discord").into_response()
+        Redirect::temporary("/auth/google").into_response()
     }
 }
 
