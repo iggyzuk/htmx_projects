@@ -5,6 +5,7 @@ members = [
     "htmx_router",
     "htmx_wordle",
     "htmx_images",
+    "htmx_auth",
 ]
 resolver = "2"
 
@@ -19,6 +20,7 @@ tinyrand = "0.5.0"
 uuid = { version = "1.7.0", features = ["v4"] }
 chrono = { version = "0.4.35", features = ["serde"] }
 thiserror = { version = "1.0.57" }
+anyhow = "1.0.81"
 toml = "0.8.11"
 axum-htmx = "0.5.0"
 tracing = "0.1"
@@ -26,3 +28,5 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 base64 = "0.22.0"
 ron = "0.8.1"
 dotenvy = "0.15.7"
+hyper = { version = "1.2.0", features = ["client"] }
+http = "1.0.0"

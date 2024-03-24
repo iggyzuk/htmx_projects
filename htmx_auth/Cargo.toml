@@ -1,0 +1,22 @@
+[package]
+name = "htmx_auth"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+axum = { workspace = true }
+maud = { workspace = true }
+tokio = { workspace = true }
+tower-http = { workspace = true }
+serde = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+dotenvy = { workspace = true }
+anyhow = { workspace = true }
+oauth2 = { version = "4.4.2" }
+reqwest = { version = "0.12.0", default-features = false, features = ["rustls-tls", "json"] }
+async-session = "3.0.0"
+axum-extra = { version = "*", features = ["typed-header"] }
+http = { workspace = true }

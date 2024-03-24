@@ -16,5 +16,8 @@ images:
 images-r:
 	cargo watch -x 'run --bin htmx_images --release' -w htmx_images/src
 
+auth:
+	cargo watch -x 'run --bin htmx_auth' -w htmx_auth/src
+
 deploy:
 	fly deploy

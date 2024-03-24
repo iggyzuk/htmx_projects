@@ -1,5 +1,5 @@
 *target/
 .DS_Store
 save_data.json
-/data
+/junk
 .env
