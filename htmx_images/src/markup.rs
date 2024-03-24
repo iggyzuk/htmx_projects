@@ -17,12 +17,49 @@ pub(crate) fn base(content: Markup) -> Markup {
 
                 script src="https://unpkg.com/htmx.org@1.9.10" {}
                 // script src="https://unpkg.com/hyperscript.org@0.9.12" {}
+
+                style { (global_loading_bar_style()) }
             }
-            body {
+
+            body hx-indicator=".loading-bar" {
+                div ."loading-bar" {}
                 (content)
             }
         }
     }
+}
+
+pub(crate) fn global_loading_bar_style() -> &'static str {
+    r#"
+.loading-bar {
+    opacity: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent,
+        #ffc107, transparent,
+        #ffc107, transparent
+    );
+}
+
+.htmx-request.loading-bar {
+    opacity: 1;
+    animation: fadeIn 0.2s linear forwards, slide 0.8s ease-in-out infinite;
+}
+
+@keyframes slide {
+    0%   { transform: translateX(-100%); }
+    100% { transform: translateX( 100%); }
+}
+
+@keyframes fadeIn {
+    0%   { opacity: 0; }
+    50%  { opacity: 0; }
+    100% { opacity: 1; }
+}
+"#
 }
 
 pub(crate) fn home() -> Markup {
@@ -110,31 +147,3 @@ pub(crate) fn images(images: &Vec<Image>) -> Markup {
         }
     }
 }
-
-// pub(crate) fn grid(images: Vec<&Image>) -> Markup {
-//     let img_base64 = include_str!("../img-base64.txt");
-
-//     html! {
-//         style {
-//             "
-//             .box {
-//                 min-width: 150px;
-//                 max-width: 300px;
-//                 height: 150px;
-//                 object-fit: cover;
-//                 cursor: pointer;
-//             }
-//             "
-//         }
-//         div."container-flex text-center p-3" {
-//             div."row gap-1" {
-//                 @for _i in 0..100 {
-//                     // div."col bg-dark text-white box d-flex justify-content-center align-items-center" {
-//                         // (i)
-//                         img ."col bg-dark text-white box d-flex justify-content-center align-items-center p-0 rounded cursor-pointer" src=(img_base64);
-//                     // }
-//                 }
-//             }
-//         }
-//     }
-// }
