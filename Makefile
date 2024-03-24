@@ -19,5 +19,8 @@ images-r:
 auth:
 	cargo watch -x 'run --bin htmx_auth' -w htmx_auth/src
 
+email:
+	cargo watch -x 'run --bin htmx_email' -w htmx_email/src
+
 deploy:
 	fly deploy

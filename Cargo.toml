@@ -6,6 +6,7 @@ members = [
     "htmx_wordle",
     "htmx_images",
     "htmx_auth",
+    "htmx_email",
 ]
 resolver = "2"
 
