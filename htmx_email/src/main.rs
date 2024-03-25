@@ -77,7 +77,12 @@ async fn index() -> Markup {
 
                         p { small .card-text .text-secondary { "Made by " a href="https://iggyzuk.com/" { "Iggy Zuk" } } }
 
-                        form hx-post="send-email" hx-disabled-elt="#sub-btn" { // autocomplete="off"
+                        h2 { "Preview" }
+                        div ."p-2 mb-2 border rounded" {
+                            (email_markup(&"content".to_string()))
+                        }
+
+                        form hx-post="send-email" hx-disabled-elt="#sub-btn" autocomplete="off" {
 
                             div class="form-floating mb-3" {
                                 input type="email" class="form-control" id="email-input" name="destination" {}
@@ -115,23 +120,8 @@ async fn send_email(Form(form): Form<EmailForm>) -> Result<impl IntoResponse, Ap
 
     tracing::debug!("sending an email");
 
-    // Create the html we want to send.
-    let html = html! {
-        head {
-            title { "Hello from Lettre!" }
-            style type="text/css" {
-                "h2, h4 { font-family: Arial, Helvetica, sans-serif; }"
-            }
-        }
-        div style="display: flex; flex-direction: column; align-items: center;" {
-            h1 { "Thematics.io" }
-            p { (form.body) }
-            p { small { "This email was sent with Lettre, a mailer library for Rust!" } }
-        }
-    };
-
     let email = Message::builder()
-        .from(var("FROM_EMAIL").context("missing FROM_EMAIL")?.parse()?)
+        .from(var("SMPT_FROM").context("missing SMPT_FROM")?.parse()?)
         .to(form
             .destination
             .parse()
@@ -140,7 +130,7 @@ async fn send_email(Form(form): Form<EmailForm>) -> Result<impl IntoResponse, Ap
         .singlepart(
             SinglePart::builder()
                 .header(header::ContentType::TEXT_HTML)
-                .body(String::from(html)),
+                .body(String::from(email_markup(&form.body))),
         )
         .unwrap();
 
@@ -166,6 +156,22 @@ async fn send_email(Form(form): Form<EmailForm>) -> Result<impl IntoResponse, Ap
     tracing::debug!("email sent!");
 
     Ok(html! { i ."bi bi-envelope-check-fill" { } " Email sent!" }.into_response())
+}
+
+// Create the html we want to send.
+fn email_markup(body: &String) -> Markup {
+    html! {
+        head {
+            style type="text/css" {
+                "h1 { font-family: 'Comic Sans MS', 'Comic Sans', cursive; }"
+            }
+        }
+        div style="display: flex; flex-direction: column; align-items: center;" {
+            h1 { "Welcome" }
+            p { (body) }
+            p { small { "This email was sent with Lettre, a mailer library for Rust!" } }
+        }
+    }
 }
 
 // Use anyhow, define error and enable '?'
