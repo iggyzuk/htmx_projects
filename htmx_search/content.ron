@@ -1,0 +1,102 @@
+[
+    Perk(
+        name: "Critical Hit +",
+        desc: "Increased critical hit chance.",
+        icon: "https://static.wikia.nocookie.net/noita_gamepedia_en/images/0/07/Perk_critical_hit.png"
+    ),
+    Perk(
+        name: "Breathless",
+        desc: "You can no longer drown, and can move in liquids with ease.",
+        icon: "https://static.wikia.nocookie.net/noita_gamepedia_en/images/8/88/Perk_breath_underwater.png"
+    ),
+    Perk(
+        name: "Greed",
+        desc: "You gain 2x gold per nugget.",
+        icon: "https://static.wikia.nocookie.net/noita_gamepedia_en/images/b/b6/Perk_extra_money.png"
+    ),
+    Perk(
+        name: "Exploding Corpses",
+        desc: "Enemies explode upon death, but you gain immunity to explosive damage.",
+        icon: "https://static.wikia.nocookie.net/noita_gamepedia_en/images/4/4f/Perk_exploding_corpses.png"
+    ),
+    Perk(
+        name: "Invisibility",
+        desc: "You're invisible. Stains, casting spells, kicking and taking damage removes the effect temporarily.",
+        icon: "https://static.wikia.nocookie.net/noita_gamepedia_en/images/f/f6/Perk_invisibility.png"
+    ),
+    Perk(
+        name: "All-Seeing Eye",
+        desc: "You can now see everywhere.",
+        icon: "https://static.wikia.nocookie.net/noita_gamepedia_en/images/9/9b/Perk_remove_fog_of_war.png"
+    ),
+    Perk(
+        name: "Vampirism",
+        desc: "You lose 25% maximum health, but can replenish health by drinking blood. Blood doesn't affect satiation level.",
+        icon: "https://static.wikia.nocookie.net/noita_gamepedia_en/images/2/26/Perk_vampirism.png"
+    ),
+    Perk(
+        name: "Glass Cannon",
+        desc: "Your spells deal 5x damage and have larger blast ranges, but your maximum health is capped to 50.",
+        icon: "https://static.wikia.nocookie.net/noita_gamepedia_en/images/9/99/Perk_glass_cannon.png"
+    ),
+    Perk(
+        name: "Living on the Edge",
+        desc: "When under 25% of max HP or under 25 hp in general, your spells deal 3x damage.",
+        icon: "https://static.wikia.nocookie.net/noita_gamepedia_en/images/3/35/Perk_Living_on_the_Edge.png"
+    ),
+    Perk(
+        name: "Enemy Radar",
+        desc: "Detects nearby enemies.",
+        icon: "https://static.wikia.nocookie.net/noita_gamepedia_en/images/5/5e/Perk_enemy_detector.png"
+    ),
+    Perk(
+        name: "Toxic Immunity",
+        desc: "You take no damage from toxic sludge and other toxic things.",
+        icon: "https://static.wikia.nocookie.net/noita_gamepedia_en/images/c/c3/Perk_protection_radioactivity.png"
+    ),
+    Perk(
+        name: "No Wand Tinkering",
+        desc: "Wands cannot be tinkered with, but enemies may drop blood money.",
+        icon: "https://static.wikia.nocookie.net/noita_gamepedia_en/images/7/73/Perk_no_wand_editing.png"
+    ),
+    Perk(
+        name: "Homing Shots",
+        desc: "All your spells home towards enemies very slightly.",
+        icon: "https://static.wikia.nocookie.net/noita_gamepedia_en/images/0/0c/Perk_projectile_homing.png"
+    ),
+    Perk(
+        name: "Freeze Field",
+        desc: "Freezes liquids around you.",
+        icon: "https://static.wikia.nocookie.net/noita_gamepedia_en/images/5/53/Perk_freeze_field.png"
+    ),
+    Perk(
+        name: "Lukki Mutation",
+        desc: "You grow curious additional limbs that fight for you.",
+        icon: "https://static.wikia.nocookie.net/noita_gamepedia_en/images/c/ca/Perk_attack_foot.png"
+    ),
+    Perk(
+        name: "Feared by Worms",
+        desc: "Worms run away from you, and worms and lukkis no longer destroy ground while burrowing.",
+        icon: "https://static.wikia.nocookie.net/noita_gamepedia_en/images/3/32/Perk_remove_worm_and_lukki_digging.png"
+    ),
+    Perk(
+        name: "Projectile Eater",
+        desc: "Projectiles that fly into a small sector behind you disappear.",
+        icon: "https://static.wikia.nocookie.net/noita_gamepedia_en/images/7/79/Perk_projectile_eater_sector.png"
+    ),
+    Perk(
+        name: "Angry Ghost",
+        desc: "An angry spirit comes to your aid, copying nearby spells and projectiles",
+        icon: "https://static.wikia.nocookie.net/noita_gamepedia_en/images/3/3d/Perk_Angry_ghost.png"
+    ),
+    Perk(
+        name: "Faster Projectiles",
+        desc: "Your projectile spells fly faster than before.",
+        icon: "https://static.wikia.nocookie.net/noita_gamepedia_en/images/b/b8/Perk_fast_projectiles.png",
+    ),
+    Perk(
+        name: "More Hatred",
+        desc: "Creatures in the world are more aggressive towards each other.",
+        icon: "https://static.wikia.nocookie.net/noita_gamepedia_en/images/2/28/Perk_genome_more_hatred.png"
+    )
+]

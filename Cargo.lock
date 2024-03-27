@@ -1086,6 +1086,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "htmx_search"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "dotenvy",
+ "maud",
+ "ron",
+ "serde",
+ "tokio",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "htmx_wordle"
 version = "0.1.0"
 dependencies = [

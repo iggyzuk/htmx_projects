@@ -22,5 +22,8 @@ auth:
 email:
 	cargo watch -x 'run --bin htmx_email' -w htmx_email/src
 
+search:
+	cargo watch -x 'run --bin htmx_search' -w htmx_search/src
+
 deploy:
 	fly deploy
