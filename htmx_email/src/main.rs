@@ -5,7 +5,7 @@ use axum::{
     routing::{get, post},
     Form, Router,
 };
-use lettre::message::{header, SinglePart};
+use lettre::message::header::ContentType;
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::{Message, SmtpTransport, Transport};
 use maud::{html, Markup, DOCTYPE};
@@ -127,12 +127,9 @@ async fn send_email(Form(form): Form<EmailForm>) -> Result<impl IntoResponse, Ap
             .parse()
             .context("could not parse destination email")?)
         .subject(form.subject)
-        .singlepart(
-            SinglePart::builder()
-                .header(header::ContentType::TEXT_HTML)
-                .body(String::from(email_markup(&form.body))),
-        )
-        .unwrap();
+        .header(ContentType::TEXT_HTML)
+        .body(String::from(email_markup(&form.body)))
+        .context("could not build an email")?;
 
     let creds = Credentials::new(
         var("SMPT_USERNAME").context("missing SMTP_USERNAME")?,
