@@ -25,5 +25,8 @@ email:
 search:
 	cargo watch -x 'run --bin htmx_search' -w htmx_search/src
 
+events:
+	cargo watch -x 'run --bin htmx_events' -w htmx_events/src
+
 deploy:
 	fly deploy
