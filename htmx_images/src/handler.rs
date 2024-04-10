@@ -22,6 +22,18 @@ pub(crate) async fn image(State(state): State<AppState>, Path(id): Path<i64>) ->
     (StatusCode::OK, markup::image(&img)).into_response()
 }
 
+pub(crate) async fn image_modal(State(state): State<AppState>, Path(id): Path<i64>) -> Response {
+    let res = db::get_image(&state, id).await;
+    let img = match res {
+        Ok(img) => {
+            tracing::info!("getting images {id}");
+            img
+        }
+        Err(err) => return (StatusCode::INTERNAL_SERVER_ERROR, err.to_string()).into_response(),
+    };
+    (StatusCode::OK, markup::image_modal(&img)).into_response()
+}
+
 pub(crate) async fn images(State(state): State<AppState>) -> Response {
     let res = db::get_all_images(&state).await;
     let images = match res {

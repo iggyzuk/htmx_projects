@@ -1,11 +1,11 @@
-use maud::{html, Markup, PreEscaped, DOCTYPE};
+use maud::{html, Markup, DOCTYPE};
 
 use crate::state::Image;
 
 pub(crate) fn base(content: Markup) -> Markup {
     html! {
         (DOCTYPE)
-        html data-bs-theme="dark" {
+        html data-bs-theme="light" {
             head {
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
@@ -18,7 +18,10 @@ pub(crate) fn base(content: Markup) -> Markup {
                 script src="https://unpkg.com/htmx.org@1.9.10" {}
                 // script src="https://unpkg.com/hyperscript.org@0.9.12" {}
 
-                style { (global_loading_bar_style()) }
+                // custom css and scripts
+                link rel="stylesheet" href="/assets/loading-bar.css";
+                link rel="stylesheet" href="/assets/grid.css";
+                script src="/assets/upload.js" {}
             }
 
             body hx-indicator=".loading-bar" {
@@ -29,39 +32,6 @@ pub(crate) fn base(content: Markup) -> Markup {
     }
 }
 
-pub(crate) fn global_loading_bar_style() -> &'static str {
-    r#"
-.loading-bar {
-    opacity: 0;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background: linear-gradient(90deg, transparent,
-        #ffc107, transparent,
-        #ffc107, transparent
-    );
-}
-
-.htmx-request.loading-bar {
-    opacity: 1;
-    animation: fadeIn 0.2s linear forwards, slide 0.8s ease-in-out infinite;
-}
-
-@keyframes slide {
-    0%   { transform: translateX(-100%); }
-    100% { transform: translateX( 100%); }
-}
-
-@keyframes fadeIn {
-    0%   { opacity: 0; }
-    50%  { opacity: 0; }
-    100% { opacity: 1; }
-}
-"#
-}
-
 pub(crate) fn home() -> Markup {
     let content = html! {
         div ."container-flex m-3" {
@@ -70,37 +40,21 @@ pub(crate) fn home() -> Markup {
             // images appear here
             div
             #all-images
-            ."d-flex justify-content-center flex-wrap gap-1"
             hx-trigger="load" hx-get="/images"
-            { h1 { "💿" } }
+            { h1 .text-center { "💿" } }
+
+            (modal_base())
         }
     };
     base(content)
 }
 
 pub(crate) fn form() -> Markup {
-    let script = r##"
-        htmx.on('#img-upload-form', 'htmx:xhr:progress', function(evt) {
-            var loaded = evt.detail.loaded;
-            var total = evt.detail.total;
-            var progress = (loaded / total) * 100;
-
-            document.getElementById('progress').style.width = progress + '%';
-        });
-
-        htmx.on('htmx:afterRequest', function(evt) {
-            if (evt.detail.elt && evt.detail.elt.id === 'img-upload-form') {
-                document.getElementById('progress').style.width = '0%'; // Reset progress bar
-                document.getElementById('form-file').value = ''; // Clear file input field
-            }
-        });
-    "##;
-
     html! {
         div {
             h1 { i ."bi bi-file-image" {} " Images" }
             hr;
-            div .m-2 {
+            div .my-2 {
 
                 form
                 #img-upload-form
@@ -110,7 +64,7 @@ pub(crate) fn form() -> Markup {
                 hx-target="#all-images"
                 hx-swap="afterbegin"
                 hx-disabled-elt="#sub-btn"
-                // You can do the progress bar animation with hyperscript too, but how about the rest?
+                // # you can do the progress bar animation with hyperscript too, but how about the rest?
                 // _="on htmx:xhr:progress(loaded, total) set *width of #progress to (((loaded/total)*100) + '%')"
                 {
                     div ."col-sm-8 mb-2 mb-sm-0" {
@@ -126,24 +80,65 @@ pub(crate) fn form() -> Markup {
             }
             hr;
         }
-        script { (PreEscaped(script)) }
     }
 }
 
 pub(crate) fn image(img: &Image) -> Markup {
     html! {
-        div style="max-width:150px;" {
-            a href={"/images/"(img.id)} { img .rounded src=(img.src()); }
-            div .text-truncate .fw-bold { (img.file_name) }
-            small .text-wrap { (img.id) ": " (img.short_date()) }
+        a
+        ."grid-item"
+        hx-get={"/images/"(img.id)"/modal"}
+        hx-target="#modals-here"
+        hx-trigger="click"
+        data-bs-toggle="modal"
+        data-bs-target="#modals-here"
+        {
+            img src=(img.src());
         }
     }
 }
 
 pub(crate) fn images(images: &Vec<Image>) -> Markup {
     html! {
-        @for image in images {
-            (self::image(image))
+        div .grid-container {
+            @for image in images {
+                (self::image(image))
+            }
+        }
+    }
+}
+
+pub(crate) fn modal_base() -> Markup {
+    html! {
+        div
+        #modals-here
+        ."modal modal-blur fade"
+        style="display: none"
+        aria-hidden="false"
+        tabindex="-1"
+        {
+            div
+            ."modal-dialog modal-lg modal-dialog-centered"
+            role="document"
+            {
+                div class="modal-content" {}
+            }
+        }
+    }
+}
+
+pub(crate) fn image_modal(img: &Image) -> Markup {
+    html! {
+        div ."modal-dialog modal-dialog-centered" {
+            div ."modal-content" {
+                div ."modal-header" {
+                    h5 ."modal-title text-truncate" { (img.file_name) }
+                }
+                div ."modal-body" {
+                    img src=(img.src()) ."w-100";
+                    small .text-wrap { (img.id) ": " (img.short_date()) }
+                }
+            }
         }
     }
 }

@@ -1,16 +1,15 @@
-use std::error::Error;
+use std::{error::Error, path::PathBuf};
 
 use axum::{
     extract::DefaultBodyLimit,
-    http::Method,
     routing::{get, post},
     Router,
 };
 
 use sqlx::postgres::PgPoolOptions;
 use tower_http::{
-    cors::{Any, CorsLayer},
-    limit::RequestBodyLimitLayer,
+    cors::CorsLayer, limit::RequestBodyLimitLayer, services::ServeDir,
+    validate_request::ValidateRequestHeaderLayer,
 };
 
 mod db;
@@ -22,22 +21,17 @@ mod state;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").expect("should have CARGO_MANIFEST_DIR");
+    let manifest_path = PathBuf::from(manifest_dir);
+
+    let mut env_path = manifest_path.clone();
+    env_path.push(".env");
+    let _ = dotenvy::from_filename(&env_path);
+
     // initialize tracing
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::INFO)
         .init();
-
-    let env_status = match dotenvy::from_filename("htmx_images/.env") {
-        Ok(_) => "found local .env",
-        Err(_) => "no local .env",
-    };
-    tracing::info!(env_status);
-
-    let cors = CorsLayer::new()
-        // allow `GET` and `POST` when accessing the resource
-        .allow_methods([Method::GET, Method::POST])
-        // allow requests from any origin
-        .allow_origin(Any);
 
     // database connection
     let pg_url = std::env::var("DATABASE_URL")?;
@@ -49,15 +43,22 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // migrations
     sqlx::migrate!().run(&pg_pool).await?;
 
+    let mut assets_path = manifest_path.clone();
+    assets_path.push("assets");
+
+    let serve_dir_service = ServeDir::new(assets_path);
+
     let app = Router::new()
         .route("/", get(handler::index))
         .route("/images", get(handler::images))
         .route("/images/:id", get(handler::image))
+        .route("/images/:id/modal", get(handler::image_modal))
         .route("/images", post(handler::upload_image))
         .layer(DefaultBodyLimit::disable())
         .layer(RequestBodyLimitLayer::new(100 * 1024 * 1024)) // 100 MB
         .layer(tower_http::trace::TraceLayer::new_for_http())
-        .layer(cors)
+        .layer(CorsLayer::permissive())
+        .nest_service("/assets", serve_dir_service)
         .with_state(state::State::new(pg_pool));
 
     let address = "0.0.0.0:4205";
