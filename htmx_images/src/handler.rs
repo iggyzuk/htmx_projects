@@ -14,7 +14,7 @@ pub(crate) async fn image(State(state): State<AppState>, Path(id): Path<i64>) ->
     let res = db::get_image(&state, id).await;
     let img = match res {
         Ok(img) => {
-            tracing::info!("getting images {id}");
+            tracing::info!("getting image {id}");
             img
         }
         Err(err) => return (StatusCode::INTERNAL_SERVER_ERROR, err.to_string()).into_response(),
@@ -26,7 +26,7 @@ pub(crate) async fn image_modal(State(state): State<AppState>, Path(id): Path<i6
     let res = db::get_image(&state, id).await;
     let img = match res {
         Ok(img) => {
-            tracing::info!("getting images {id}");
+            tracing::info!("getting image {id}");
             img
         }
         Err(err) => return (StatusCode::INTERNAL_SERVER_ERROR, err.to_string()).into_response(),
@@ -69,14 +69,14 @@ pub(crate) async fn upload_image(
             return (StatusCode::BAD_REQUEST, "only images can be uploaded").into_response();
         }
 
-        let (bytes, mime_type) = match img::thumbnail_for_mime(&data, &content_type) {
+        let (bytes, mime_type, dominant_color) = match img::thumbnail_for_mime(&data, &content_type) {
             Ok(bytes) => bytes,
             Err(err) => {
                 return (StatusCode::INTERNAL_SERVER_ERROR, err.to_string()).into_response();
             }
         };
 
-        let res = db::insert_image(&state, file_name.clone(), mime_type, &bytes).await;
+        let res = db::insert_image(&state, file_name.clone(), mime_type, &bytes, dominant_color).await;
 
         let image = match res {
             Ok(image) => {

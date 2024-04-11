@@ -3,11 +3,11 @@
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'htmx-projects'
+app = 'htmx-images'
 primary_region = 'waw'
 
 [http_service]
-  internal_port = 4202
+  internal_port = 4205
   force_https = true
   auto_stop_machines = true
   auto_start_machines = true
@@ -15,10 +15,6 @@ primary_region = 'waw'
   processes = ['app']
 
 [[vm]]
-  memory = '256mb'
+  memory = '512mb'
   cpu_kind = 'shared'
   cpus = 1
-
-[mounts]
-  source="storage_dir"
-  destination="/usr/src/myapp/data/"

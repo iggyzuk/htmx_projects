@@ -34,14 +34,19 @@ pub(crate) fn base(content: Markup) -> Markup {
 
 pub(crate) fn home() -> Markup {
     let content = html! {
-        div ."container-flex m-3" {
+        div ."my-3 mx-1 mx-sm-2 mx-lg-3" {
             (form())
 
             // images appear here
             div
             #all-images
-            hx-trigger="load" hx-get="/images"
-            { h1 .text-center { "💿" } }
+            .grid-container
+            hx-trigger="load"
+            hx-get="/images"
+            hx-indicator="#disk"
+            {}
+
+            { h1 #disk ."htmx-indicator d-flex justify-content-center" { "💿" } }
 
             (modal_base())
         }
@@ -58,7 +63,7 @@ pub(crate) fn form() -> Markup {
 
                 form
                 #img-upload-form
-                .row
+                ."d-flex flex-column flex-sm-row gap-2"
                 hx-encoding="multipart/form-data"
                 hx-post="/images"
                 hx-target="#all-images"
@@ -70,7 +75,7 @@ pub(crate) fn form() -> Markup {
                     div ."col-sm-8 mb-2 mb-sm-0" {
                         input id="form-file" ."form-control form-control-lg" type="file" name="file" accept="image/jpeg, image/png, image/webp, image/gif";
                     }
-                    div .col-sm-4 {
+                    div ."col-sm-4 pe-sm-2" {
                         button #sub-btn ."btn btn-primary btn-lg w-100" { i ."bi bi-file-earmark-arrow-up-fill" {} " Upload" }
                     }
                 }
@@ -84,6 +89,14 @@ pub(crate) fn form() -> Markup {
 }
 
 pub(crate) fn image(img: &Image) -> Markup {
+    let color_int = img.dominant_color.unwrap_or_default();
+
+    let red = (color_int >> 16) & 0xFF;
+    let green = (color_int >> 8) & 0xFF;
+    let blue = color_int & 0xFF;
+
+    let hex_string = format!("#{:02X}{:02X}{:02X}{:02X}", red, green, blue, 32);
+
     html! {
         a
         ."grid-item"
@@ -93,17 +106,16 @@ pub(crate) fn image(img: &Image) -> Markup {
         data-bs-toggle="modal"
         data-bs-target="#modals-here"
         {
-            img src=(img.src());
+            // img style={"box-shadow: 2px 2px 0px "(hex_string)";"} src=(img.src());
+            img style={"border: 1px solid "(hex_string)";"} src=(img.src());
         }
     }
 }
 
 pub(crate) fn images(images: &Vec<Image>) -> Markup {
     html! {
-        div .grid-container {
-            @for image in images {
-                (self::image(image))
-            }
+        @for image in images {
+            (self::image(image))
         }
     }
 }

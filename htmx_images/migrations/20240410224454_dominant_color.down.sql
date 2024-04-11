@@ -1,0 +1,2 @@
+ALTER TABLE IMAGE
+DROP COLUMN dominant_color;

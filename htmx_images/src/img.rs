@@ -6,9 +6,7 @@ use image::AnimationDecoder;
 use image::DynamicImage;
 use image::Frame;
 use image::GenericImageView;
-
 use image::ImageDecoder;
-
 use image::RgbaImage;
 
 use webp::AnimDecoder;
@@ -27,7 +25,7 @@ const FRAME_RATE: i32 = 100;
 pub(crate) fn thumbnail_for_mime(
     data: &[u8],
     mime_type: &String,
-) -> Result<(Vec<u8>, String), Box<dyn Error>> {
+) -> Result<(Vec<u8>, String, i32), Box<dyn Error>> {
     match mime_type.as_str() {
         "image/webp" => webp_to_webp(&data),
         "image/gif" => gif_to_webp(&data),
@@ -35,15 +33,16 @@ pub(crate) fn thumbnail_for_mime(
     }
 }
 
-pub(crate) fn any_to_webp(bytes: &[u8]) -> Result<(Vec<u8>, String), Box<dyn Error>> {
+pub(crate) fn any_to_webp(bytes: &[u8]) -> Result<(Vec<u8>, String, i32), Box<dyn Error>> {
     let img = image::load_from_memory(bytes)?;
     let small_img = resize_and_crop(img);
+    let dominant = dominant(&small_img.to_rgb8());
     let encoder = Encoder::from_image(&small_img)?;
     let webp_memory = encoder.encode(QUALITY);
-    Ok((webp_memory.to_vec(), mime::IMAGE_WEBP.to_string()))
+    Ok((webp_memory.to_vec(), mime::IMAGE_WEBP.to_string(), dominant))
 }
 
-pub(crate) fn gif_to_webp(gif_bytes: &[u8]) -> Result<(Vec<u8>, String), Box<dyn Error>> {
+pub(crate) fn gif_to_webp(gif_bytes: &[u8]) -> Result<(Vec<u8>, String, i32), Box<dyn Error>> {
     let gif_decoder = GifDecoder::new(gif_bytes)?;
 
     let (original_width, original_height) = gif_decoder.dimensions();
@@ -82,12 +81,22 @@ pub(crate) fn gif_to_webp(gif_bytes: &[u8]) -> Result<(Vec<u8>, String), Box<dyn
         timestamp += FRAME_RATE;
     }
 
+    // Take the dominant color from the first processed frame.
+    let dominant = {
+        let first_frame = &processed_frames[0];
+        dominant(&first_frame.to_rgb8())
+    };
+
     // Write bytes from encoder.
     let webp_encoder = anim_encoder.encode();
-    Ok((webp_encoder.to_vec(), mime::IMAGE_WEBP.to_string()))
+    Ok((
+        webp_encoder.to_vec(),
+        mime::IMAGE_WEBP.to_string(),
+        dominant,
+    ))
 }
 
-pub(crate) fn webp_to_webp(bytes: &[u8]) -> Result<(Vec<u8>, String), Box<dyn Error>> {
+pub(crate) fn webp_to_webp(bytes: &[u8]) -> Result<(Vec<u8>, String, i32), Box<dyn Error>> {
     let anim_image = AnimDecoder::new(&bytes).decode()?;
 
     if anim_image.has_animation() {
@@ -122,9 +131,19 @@ pub(crate) fn webp_to_webp(bytes: &[u8]) -> Result<(Vec<u8>, String), Box<dyn Er
             timestamp += FRAME_RATE;
         }
 
+        // Take the dominant color from the first processed frame.
+        let dominant = {
+            let first_frame = &processed_frames[0];
+            dominant(&first_frame.to_rgb8())
+        };
+
         // Write bytes from encoder.
         let webp_encoder = anim_encoder.encode();
-        return Ok((webp_encoder.to_vec(), mime::IMAGE_WEBP.to_string()));
+        return Ok((
+            webp_encoder.to_vec(),
+            mime::IMAGE_WEBP.to_string(),
+            dominant,
+        ));
     }
 
     any_to_webp(bytes)
@@ -156,4 +175,19 @@ fn window(width: u32, height: u32) -> (u32, u32) {
         let aspect = height as f32 / width as f32;
         (TARGET_PX, (TARGET_PX as f32 * aspect).round() as u32)
     }
+}
+
+/// Find the dominant color from the given image as bytes
+/// # Important
+/// Bytes must be in RGB format!
+fn dominant(bytes: &[u8]) -> i32 {
+    let palette = color_thief::get_palette(&bytes, color_thief::ColorFormat::Rgb, 10, 3).unwrap();
+
+    let dominant = palette[0];
+
+    let r = (dominant.r as u32) << 16;
+    let g = (dominant.g as u32) << 8;
+    let b = dominant.b as u32;
+
+    (r | g | b) as i32
 }

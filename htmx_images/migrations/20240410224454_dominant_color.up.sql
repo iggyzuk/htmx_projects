@@ -1,0 +1,2 @@
+ALTER TABLE IMAGE
+ADD dominant_color INT NULL;

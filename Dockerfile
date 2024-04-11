@@ -8,7 +8,7 @@ WORKDIR /usr/src/myapp
 COPY . .
 
 # Build the Rust application
-RUN cargo build --bin htmx_wordle --release
+RUN cargo build --bin htmx_images --release
 
 # Create a new lightweight image for running the application
 FROM debian:stable-slim AS runtime
@@ -17,10 +17,13 @@ FROM debian:stable-slim AS runtime
 WORKDIR /usr/src/myapp/
 
 # Copy the compiled binary from the builder stage into the final image
-COPY --from=builder /usr/src/myapp/target/release/htmx_wordle ./app
+COPY --from=builder /usr/src/myapp/target/release/htmx_images ./app
+
+# Copy assets directory
+COPY --from=builder /usr/src/myapp/htmx_images/assets /usr/src/myapp/assets
 
 # Expose any necessary ports
-EXPOSE 3242
+EXPOSE 4205
 
 # Command to run the application
 CMD ["./app"]

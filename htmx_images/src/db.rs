@@ -24,11 +24,12 @@ pub(crate) async fn insert_image(
     file_name: String,
     mime_type: String,
     image_data: &[u8],
+    dominant_color: i32,
 ) -> Result<Image, Box<dyn Error>> {
     const QUERY: &'static str = r#"
-INSERT INTO image (file_name, mime_type, image_data)
-VALUES ($1, $2, $3)
-RETURNING id, file_name, mime_type, image_data, created_at;
+INSERT INTO image (file_name, mime_type, image_data, dominant_color)
+VALUES ($1, $2, $3, $4)
+RETURNING *;
     "#;
 
     let database = &state.database;
@@ -37,6 +38,7 @@ RETURNING id, file_name, mime_type, image_data, created_at;
         .bind(&file_name)
         .bind(&mime_type)
         .bind(image_data)
+        .bind(dominant_color)
         .fetch_one(database)
         .await?;
 

@@ -7,10 +7,7 @@ use axum::{
 };
 
 use sqlx::postgres::PgPoolOptions;
-use tower_http::{
-    cors::CorsLayer, limit::RequestBodyLimitLayer, services::ServeDir,
-    validate_request::ValidateRequestHeaderLayer,
-};
+use tower_http::{cors::CorsLayer, limit::RequestBodyLimitLayer, services::ServeDir};
 
 mod db;
 mod handler;

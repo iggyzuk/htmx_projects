@@ -28,3 +28,4 @@ sqlx = { version = "0.7.4", features = [
 image = { version = "0.24.7", features = ["gif"] }
 webp = "0.2.6"
 mediatype = "0.19.18"
+color-thief = "0.2.2"

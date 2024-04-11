@@ -21,6 +21,7 @@ pub(crate) struct Image {
     pub(crate) file_name: String,
     pub(crate) mime_type: String,
     pub(crate) image_data: Vec<u8>,
+    pub(crate) dominant_color: Option<i32>,
     pub(crate) created_at: chrono::DateTime<chrono::Utc>,
 }
 
