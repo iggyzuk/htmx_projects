@@ -40,4 +40,17 @@ impl Image {
     pub(crate) fn short_date(&self) -> String {
         self.created_at.format("%y-%m-%d").to_string()
     }
+
+    pub(crate) fn dominant_hex(&self, alpha: f32) -> String {
+        assert!(alpha >= 0.0 && alpha <= 1.0, "alpha should be between 0 and 1");
+
+        let color_int = self.dominant_color.unwrap_or_default();
+
+        let red = (color_int >> 16) & 0xFF;
+        let green = (color_int >> 8) & 0xFF;
+        let blue = color_int & 0xFF;
+        let alpha = (alpha * 255.0) as i32;
+
+        format!("#{:02X}{:02X}{:02X}{:02X}", red, green, blue, alpha)
+    }
 }

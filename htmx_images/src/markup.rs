@@ -89,14 +89,6 @@ pub(crate) fn form() -> Markup {
 }
 
 pub(crate) fn image(img: &Image) -> Markup {
-    let color_int = img.dominant_color.unwrap_or_default();
-
-    let red = (color_int >> 16) & 0xFF;
-    let green = (color_int >> 8) & 0xFF;
-    let blue = color_int & 0xFF;
-
-    let hex_string = format!("#{:02X}{:02X}{:02X}{:02X}", red, green, blue, 32);
-
     html! {
         a
         ."grid-item"
@@ -106,8 +98,7 @@ pub(crate) fn image(img: &Image) -> Markup {
         data-bs-toggle="modal"
         data-bs-target="#modals-here"
         {
-            // img style={"box-shadow: 2px 2px 0px "(hex_string)";"} src=(img.src());
-            img style={"border: 1px solid "(hex_string)";"} src=(img.src());
+            img src=(img.src());
         }
     }
 }
@@ -147,7 +138,7 @@ pub(crate) fn image_modal(img: &Image) -> Markup {
                     h5 ."modal-title text-truncate" { (img.file_name) }
                 }
                 div ."modal-body" {
-                    img src=(img.src()) ."w-100";
+                    img style={"border: 2px solid "(img.dominant_hex(1.0))";"} src=(img.src()) ."rounded w-100";
                     small .text-wrap { (img.id) ": " (img.short_date()) }
                 }
             }
