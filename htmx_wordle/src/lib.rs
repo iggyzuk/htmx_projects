@@ -70,9 +70,9 @@ pub async fn run() {
         .route("/games", get(games))
         .with_state(state);
 
-        let address = "0.0.0.0:4202";
-        let listener = tokio::net::TcpListener::bind(address).await.unwrap();
-        println!("🚀 Server Started: {address} 🚀");
+    let address = "0.0.0.0:4202";
+    let listener = tokio::net::TcpListener::bind(address).await.unwrap();
+    println!("🚀 Server Started: {address} 🚀");
 
     axum::serve(listener, app.into_make_service())
         .await
@@ -405,7 +405,8 @@ fn available_letters_markup(available_letters: &HashMap<char, Letter>) -> Markup
     }
 }
 
-/// The markup for a word-state, it shows which letters are correct, are in wrong place, or simply wrong.
+/// The markup for a word-state, it shows which letters are correct, are in
+/// wrong place, or simply wrong.
 impl Render for WordState {
     fn render(&self) -> Markup {
         html! {

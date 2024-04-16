@@ -1,19 +1,10 @@
 use std::error::Error;
 
-use image::codecs::gif::GifDecoder;
-use image::imageops::FilterType;
-use image::AnimationDecoder;
-use image::DynamicImage;
-use image::Frame;
-use image::GenericImageView;
-use image::ImageDecoder;
-use image::RgbaImage;
-
-use webp::AnimDecoder;
-use webp::AnimEncoder;
-use webp::AnimFrame;
-use webp::Encoder;
-use webp::WebPConfig;
+use image::{
+    codecs::gif::GifDecoder, imageops::FilterType, AnimationDecoder, DynamicImage, Frame,
+    GenericImageView, ImageDecoder, RgbaImage,
+};
+use webp::{AnimDecoder, AnimEncoder, AnimFrame, Encoder, WebPConfig};
 
 use crate::mime;
 

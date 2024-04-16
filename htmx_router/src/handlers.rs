@@ -137,7 +137,8 @@ pub(crate) async fn about(hx_req: HxReq) -> Markup {
     router_fragment_stack(hx_req, markup::about())
 }
 
-/// This functions returns the fragment as is when the target matches otherwise it send the full page.
+/// This functions returns the fragment as is when the target matches otherwise
+/// it send the full page.
 fn router_fragment_stack(hx_req: HxReq, fragment: Markup) -> Markup {
     if hx_req.is_targeting(ROUTER_CONTENT) {
         fragment
@@ -147,13 +148,17 @@ fn router_fragment_stack(hx_req: HxReq, fragment: Markup) -> Markup {
 }
 
 /// This function works with main-router and sub-router.
-/// It can return fragments with various level of completeness depending on the target of the request.
+/// It can return fragments with various level of completeness depending on the
+/// target of the request.
 ///
 /// # Example:
-/// 1. Request targets the sub-router (the inner tab inside the hero page) then we return the fragment as is.
-/// 2. Request targets the main-router (e.g. hero page) then we need to wrap it like an onion with the hero
+/// 1. Request targets the sub-router (the inner tab inside the hero page) then
+///    we return the fragment as is.
+/// 2. Request targets the main-router (e.g. hero page) then we need to wrap it
+///    like an onion with the hero
 /// page markup: hero -> talents.
-/// 3. Request doesn't target anything, it means we need to send the full body: router -> hero -> talents.
+/// 3. Request doesn't target anything, it means we need to send the full body:
+///    router -> hero -> talents.
 fn hero_fragment_stack(hx_req: HxReq, hero: &Hero, fragment: Markup) -> Markup {
     if hx_req.is_targeting(CARD_ROUTER_CONTENT) {
         fragment

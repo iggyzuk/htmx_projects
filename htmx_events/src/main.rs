@@ -6,7 +6,6 @@ use axum::{
     Router,
 };
 use axum_htmx::HxResponseTrigger;
-
 use maud::{html, Markup, DOCTYPE};
 use serde::Deserialize;
 use tower_http::cors::CorsLayer;

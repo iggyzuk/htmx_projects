@@ -1,5 +1,4 @@
 use axum::{http::Method, routing::get, Router};
-
 use tower_http::cors::{Any, CorsLayer};
 
 use crate::state::AppState;

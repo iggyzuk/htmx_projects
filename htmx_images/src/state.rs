@@ -27,8 +27,7 @@ pub(crate) struct Image {
 
 impl Image {
     pub(crate) fn as_base64(&self) -> String {
-        use base64::engine::general_purpose::STANDARD_NO_PAD;
-        use base64::Engine;
+        use base64::{engine::general_purpose::STANDARD_NO_PAD, Engine};
 
         STANDARD_NO_PAD.encode(&self.image_data)
     }
@@ -42,7 +41,10 @@ impl Image {
     }
 
     pub(crate) fn dominant_hex(&self, alpha: f32) -> String {
-        assert!(alpha >= 0.0 && alpha <= 1.0, "alpha should be between 0 and 1");
+        assert!(
+            alpha >= 0.0 && alpha <= 1.0,
+            "alpha should be between 0 and 1"
+        );
 
         let color_int = self.dominant_color.unwrap_or_default();
 

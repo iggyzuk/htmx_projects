@@ -1,5 +1,6 @@
-use crate::state::{AppState, Image};
 use std::error::Error;
+
+use crate::state::{AppState, Image};
 
 pub(crate) async fn get_image(state: &AppState, id: i64) -> Result<Image, Box<dyn Error>> {
     const QUERY: &'static str = r#"SELECT * FROM image WHERE id = $1;"#;

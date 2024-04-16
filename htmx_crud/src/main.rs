@@ -1,7 +1,12 @@
 use std::sync::Arc;
 
 use axum::{
-    body::Body, extract::{Path, State}, http::{Method, StatusCode}, response::{IntoResponse, Response}, routing::{get, post}, Form, Router
+    body::Body,
+    extract::{Path, State},
+    http::{Method, StatusCode},
+    response::{IntoResponse, Response},
+    routing::{get, post},
+    Form, Router,
 };
 use maud::{html, Markup, PreEscaped, Render, DOCTYPE};
 use serde::Deserialize;
@@ -17,9 +22,15 @@ impl AppState {
     fn new() -> Arc<Self> {
         let mut tasks = vec![];
         tasks.push(Task::new("Learn how to be epic with htmx".to_string()));
-        tasks.push(Task::new_done("Add the ability to edit these tasks".to_string()));
-        tasks.push(Task::new_done("Make this crud experiement prettier".to_string()));
-        tasks.push(Task::new("Take over the world (break it up in simpler tasks)".to_string()));
+        tasks.push(Task::new_done(
+            "Add the ability to edit these tasks".to_string(),
+        ));
+        tasks.push(Task::new_done(
+            "Make this crud experiement prettier".to_string(),
+        ));
+        tasks.push(Task::new(
+            "Take over the world (break it up in simpler tasks)".to_string(),
+        ));
         tasks.push(Task::new_done("Become enlightened ✨".to_string()));
 
         Arc::new(AppState {
@@ -89,9 +100,9 @@ async fn main() {
         .layer(cors)
         .with_state(AppState::new());
 
-        let address = "0.0.0.0:4203";
-        let listener = tokio::net::TcpListener::bind(address).await.unwrap();
-        println!("🚀 Server Started: {address} 🚀");
+    let address = "0.0.0.0:4203";
+    let listener = tokio::net::TcpListener::bind(address).await.unwrap();
+    println!("🚀 Server Started: {address} 🚀");
 
     axum::serve(listener, app.into_make_service())
         .await
@@ -115,14 +126,14 @@ async fn index() -> Markup {
             }
             body {
                 .container {
-                    
+
                     .card .m-3 {
                         h5 .card-header { "Tasks" }
                         .card-body {
                             // main form to create tasks
                             form hx-post="/task" hx-target="#task-list" autocomplete="off" {
                                 div class="input-group mb-3" {
-                                    
+
                                     // task name input
                                     input
                                     id="title"
@@ -186,7 +197,10 @@ async fn update_task(State(state): State<Arc<AppState>>, Path(id): Path<Uuid>) -
     (StatusCode::NOT_FOUND, "task doesn't exist").into_response()
 }
 
-async fn delete_task(State(state): State<Arc<AppState>>, Path(id): Path<Uuid>) -> impl IntoResponse {
+async fn delete_task(
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<Uuid>,
+) -> impl IntoResponse {
     let mut tasks = state.tasks.write().await;
     tasks.delete(id);
     (StatusCode::OK, Body::empty())

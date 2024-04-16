@@ -1,6 +1,7 @@
+use std::collections::{HashMap, HashSet};
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
 use uuid::Uuid;
 
 pub const LETTERS: &'static str = "qwertyuiopasdfghjklzxcvbnm";
@@ -172,8 +173,10 @@ mod tests {
         assert_eq!(state.letters[0].state, LetterState::Correct);
         assert_eq!(state.letters[1].state, LetterState::Wrong);
         assert_eq!(state.letters[2].state, LetterState::WrongPlace);
-        assert_eq!(state.letters[3].state, LetterState::WrongPlace); // First 'l' was here
-        assert_eq!(state.letters[4].state, LetterState::Wrong); // Duplicate 'l' is considered wrong
+        // First 'l' is here
+        assert_eq!(state.letters[3].state, LetterState::WrongPlace);
+        // Duplicate 'l' is considered wrong
+        assert_eq!(state.letters[4].state, LetterState::Wrong);
     }
 
     #[test]

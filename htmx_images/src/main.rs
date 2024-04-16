@@ -5,7 +5,6 @@ use axum::{
     routing::{get, post},
     Router,
 };
-
 use sqlx::postgres::PgPoolOptions;
 use tower_http::{cors::CorsLayer, limit::RequestBodyLimitLayer, services::ServeDir};
 
