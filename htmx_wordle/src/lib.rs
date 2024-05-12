@@ -429,8 +429,9 @@ impl Render for WordState {
 fn dynamic_word_markup() -> Markup {
     html! {
         div class="d-flex justify-content-center gap-1 mb-1" {
-            template x-for="letter in fill" {
+            template x-for="(letter, index) in fill" ":key"="index" {
                 div
+                x-from-template
                 .p-2 .bg-light .text-dark .border
                 x-bind:class="{ 'border-primary': letter == '-' }"
                 x-text="letter"

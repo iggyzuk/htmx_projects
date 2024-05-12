@@ -19,8 +19,13 @@ document.addEventListener('alpine:init', () => {
             }
         },
         clear() {
-            console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             this.letters = [];
         }
     }));
 });
+
+// HTMX history cache and Alpine template tags not working together #2924
+// https://github.com/alpinejs/alpine/discussions/2924
+document.addEventListener('htmx:beforeHistorySave', (evt) => {
+    document.querySelectorAll('[x-from-template]').forEach((e) => e.remove());
+})
