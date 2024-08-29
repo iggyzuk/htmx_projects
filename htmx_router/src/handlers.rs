@@ -114,7 +114,7 @@ pub(crate) async fn ability(
 ) -> Response {
     let abilities = state.abilities.read().await;
     if let Some(ability) = abilities.read(ability_id) {
-        router_fragment_stack(hx_req, markup::ability(&ability)).into_response()
+        router_fragment_stack(hx_req, markup::ability(ability)).into_response()
     } else {
         (StatusCode::NOT_FOUND, "ability doesn't exist").into_response()
     }
@@ -127,7 +127,7 @@ pub(crate) async fn talent(
 ) -> Response {
     let talents = state.talents.read().await;
     if let Some(talent) = talents.read(ability_id) {
-        router_fragment_stack(hx_req, markup::talent(&talent)).into_response()
+        router_fragment_stack(hx_req, markup::talent(talent)).into_response()
     } else {
         (StatusCode::NOT_FOUND, "talent doesn't exist").into_response()
     }
