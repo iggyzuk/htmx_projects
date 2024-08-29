@@ -29,7 +29,7 @@ where
             request: parts
                 .headers
                 .get("hx-request")
-                .map_or(None, |x| Some(x.to_str().unwrap().to_string())),
+                .map(|x| x.to_str().unwrap().to_string()),
             target: parts
                 .headers
                 .get("hx-target")
