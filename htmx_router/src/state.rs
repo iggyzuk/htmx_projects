@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use tokio::sync::RwLock;
 
-fn into_id(id: &String) -> String {
+fn into_id(id: &str) -> String {
     // Replace spaces with dashes and remove strange characters
     id.to_lowercase()
         .chars()
