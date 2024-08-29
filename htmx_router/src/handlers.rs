@@ -155,8 +155,7 @@ fn router_fragment_stack(hx_req: HxReq, fragment: Markup) -> Markup {
 /// 1. Request targets the sub-router (the inner tab inside the hero page) then
 ///    we return the fragment as is.
 /// 2. Request targets the main-router (e.g. hero page) then we need to wrap it
-///    like an onion with the hero
-/// page markup: hero -> talents.
+///    like an onion with the hero page markup: hero -> talents.
 /// 3. Request doesn't target anything, it means we need to send the full body:
 ///    router -> hero -> talents.
 fn hero_fragment_stack(hx_req: HxReq, hero: &Hero, fragment: Markup) -> Markup {
